@@ -9,10 +9,11 @@ Orden recomendado de lectura:
   1. 01_arquitectura/vision_general.text
   2. 01_arquitectura/estructura_carpetas.text
   3. 02_backend/resumen_backend.text
-  4. 03_microservicios/app_pagos.text
-  5. 04_infraestructura/base_datos_postgresql.text
-  6. 05_flujos/flujo_compra.text
-  7. 06_operacion/levantar_proyecto.text
+  4. 03_frontend/frontend.text
+  5. 03_microservicios/app_pagos.text
+  6. 04_infraestructura/base_datos_postgresql.text
+  7. 05_flujos/flujo_compra.text
+  8. 06_operacion/levantar_proyecto.text
 
 Carpetas:
   01_arquitectura
@@ -20,6 +21,9 @@ Carpetas:
 
   02_backend
     Explica la API principal FastAPI, endpoints, base de datos y seguridad.
+
+  03_frontend
+    Explica la tienda Angular, su flujo de sesion y su Dockerfile.
 
   03_microservicios
     Explica servicios externos o internos que complementan al backend.

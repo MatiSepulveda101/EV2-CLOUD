@@ -1,9 +1,13 @@
+name: ev2-cloud-ecommerce
+
 services:
   postgres-db:
     image: postgres:15-alpine
-    container_name: postgres-db
-    env_file:
-      - ./backend/.env
+    container_name: ev2-postgres-db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-ecommerce}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
     ports:
       - "5432:5432"
     volumes:
@@ -20,9 +24,14 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: backend
-    env_file:
-      - ./backend/.env
+    container_name: ev2-backend
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres-db:5432/${POSTGRES_DB:-ecommerce}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-dev-secret-key-with-enough-length}
+      APP_PAGOS_URL: ${APP_PAGOS_URL:-http://app-pagos:8002}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:4200,http://127.0.0.1:4200}
+      AUTO_CREATE_TABLES: ${AUTO_CREATE_TABLES:-true}
+      AUTO_SEED_PRODUCTS: ${AUTO_SEED_PRODUCTS:-true}
     ports:
       - "8000:8000"
     networks:
@@ -30,21 +39,50 @@ services:
     depends_on:
       postgres-db:
         condition: service_healthy
+      app-pagos:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3).read()"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     restart: unless-stopped
 
   app-pagos:
-    profiles:
-      - payments
     build:
       context: ./microservicios/app-pagos
       dockerfile: Dockerfile
-    container_name: app-pagos
-    env_file:
-      - ./backend/.env
+    container_name: ev2-app-pagos
+    environment:
+      MP_ACCESS_TOKEN: ${MP_ACCESS_TOKEN:-}
+      MP_PUBLIC_KEY: ${MP_PUBLIC_KEY:-}
+      MP_WEBHOOK_URL: ${MP_WEBHOOK_URL:-}
+      MP_SUCCESS_URL: ${MP_SUCCESS_URL:-http://localhost:4200}
+      MP_FAILURE_URL: ${MP_FAILURE_URL:-http://localhost:4200}
+      MP_PENDING_URL: ${MP_PENDING_URL:-http://localhost:4200}
     ports:
       - "8002:8002"
     networks:
       - microservices-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8002/health', timeout=3).read()"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: ev2-frontend
+    ports:
+      - "4200:80"
+    networks:
+      - microservices-network
+    depends_on:
+      backend:
+        condition: service_started
     restart: unless-stopped
 
 networks:

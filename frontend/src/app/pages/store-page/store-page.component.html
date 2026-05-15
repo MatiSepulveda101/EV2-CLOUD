@@ -1,0 +1,383 @@
+<main class="store-shell">
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">EV</span>
+      <div>
+        <strong>ElectroFactory</strong>
+        <span>tecnologia y componentes</span>
+      </div>
+    </div>
+
+    <nav class="nav-links" aria-label="Navegacion principal">
+      <button type="button" (click)="seleccionarCategoria('Todos')">Inicio</button>
+      <button type="button" (click)="seleccionarCategoria('Computacion')">Computacion</button>
+      <button type="button" (click)="seleccionarCategoria('Perifericos')">Perifericos</button>
+      <button type="button" (click)="seleccionarCategoria('Tecnologia')">Ofertas</button>
+    </nav>
+
+    <label class="search-box">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="m21 20-5.2-5.2a7 7 0 1 0-1.1 1.1L20 21zM5 10a5 5 0 1 1 10 0 5 5 0 0 1-10 0" />
+      </svg>
+      <input
+        #busqueda
+        type="search"
+        placeholder="Busca un producto"
+        [value]="terminoBusqueda()"
+        (input)="actualizarBusqueda(busqueda.value)"
+      />
+    </label>
+
+    <div class="top-actions">
+      @if (tienda.sessionState.isAuthenticated()) {
+        <button type="button" class="account-button" (click)="cerrarSesionActual()">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M10 17v-2h4V9h-4V7l-5 5zm9-14H9a2 2 0 0 0-2 2v3h2V5h10v14H9v-3H7v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2" />
+          </svg>
+          Salir
+        </button>
+      } @else {
+        <button type="button" class="account-button" (click)="abrirSesion('login')">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5m0 2c-4.4 0-8 2.2-8 5v1h16v-1c0-2.8-3.6-5-8-5" />
+          </svg>
+          Hola, ingresa
+        </button>
+      }
+
+      <button type="button" class="plain-link" (click)="abrirMisCompras()">Mis compras</button>
+
+      <button type="button" class="cart-button" (click)="abrirCarrito()" aria-label="Abrir carrito">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M7 18a2 2 0 1 0 0 4 2 2 0 0 0 0-4m10 0a2 2 0 1 0 .1 0M7.2 14h8.9c.8 0 1.5-.5 1.8-1.2L21 5H6.2L5.7 3H2v2h2.1l3 11H19v-2z" />
+        </svg>
+        <span>{{ cantidadCarrito() }}</span>
+      </button>
+    </div>
+  </header>
+
+  <section class="promo-strip">
+    <div>
+      <p>Despacho a todo Chile</p>
+      <h1>Arma tu setup con tecnologia lista para comprar</h1>
+    </div>
+    <div class="promo-metrics">
+      <span><strong>{{ tienda.products().length }}</strong> productos</span>
+      <span><strong>{{ totalResultados() }}</strong> encontrados</span>
+      <span><strong>{{ subtotalCarrito() | currency: 'CLP' : 'symbol' : '1.0-0' }}</strong> carrito</span>
+    </div>
+  </section>
+
+  @if (tienda.authError()) {
+    <p class="message error">{{ tienda.authError() }}</p>
+  }
+  @if (tienda.successMessage()) {
+    <p class="message success">{{ tienda.successMessage() }}</p>
+  }
+
+  <section class="store-layout">
+    <aside class="filters" aria-label="Filtros de productos">
+      <div class="filters-head">
+        <h2>Catalogo</h2>
+        <button type="button" (click)="seleccionarCategoria('Todos')">Limpiar</button>
+      </div>
+
+      <p class="results-count">{{ totalResultados() }} resultados</p>
+
+      <div class="filter-group">
+        <h3>Categorias</h3>
+        <div class="category-list">
+          @for (categoria of categorias(); track categoria) {
+            <button
+              type="button"
+              [class.active]="categoriaActiva() === categoria"
+              (click)="seleccionarCategoria(categoria)"
+            >
+              {{ categoria }}
+            </button>
+          }
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <h3>Precio oferta</h3>
+        <div class="price-rail" aria-hidden="true"><span></span></div>
+        <div class="price-labels">
+          <span>$20.000</span>
+          <span>$500.000+</span>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <h3>Disponibilidad</h3>
+        <p class="filter-note">Productos con stock para compra inmediata.</p>
+      </div>
+    </aside>
+
+    <section class="catalog">
+      <div class="catalog-toolbar">
+        <div>
+          <p>{{ categoriaActiva() }}</p>
+          <h2>Productos destacados</h2>
+        </div>
+        <button type="button" class="outline-button" (click)="tienda.loadProducts()" [disabled]="tienda.loadingProducts()">
+          Actualizar
+        </button>
+      </div>
+
+      @if (tienda.productsError()) {
+        <p class="message inline error">{{ tienda.productsError() }}</p>
+      }
+
+      @if (tienda.loadingProducts()) {
+        <div class="loading-grid">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      } @else {
+        <div class="products-grid">
+          @for (producto of productosFiltrados(); track producto.id) {
+            <article class="product-card">
+              <div class="image-wrap">
+                @if (producto.image_url) {
+                  <img [src]="producto.image_url" [alt]="producto.name" loading="lazy" />
+                } @else {
+                  <span>TECH</span>
+                }
+              </div>
+
+              <div class="product-copy">
+                <div class="product-meta">
+                  <span>{{ obtenerMarcaProducto(producto) }}</span>
+                  <small>ID {{ producto.id }}</small>
+                </div>
+
+                <h3>{{ producto.name }}</h3>
+                <p>{{ producto.description || 'Producto disponible en catalogo.' }}</p>
+
+                <div class="price-block">
+                  <div>
+                    <strong>{{ producto.price | currency: 'CLP' : 'symbol' : '1.0-0' }}</strong>
+                    <span>Transferencia / Debito</span>
+                  </div>
+                  <small>
+                    <b>-12%</b>
+                    <del>{{ obtenerPrecioReferencia(producto.price) | currency: 'CLP' : 'symbol' : '1.0-0' }}</del>
+                  </small>
+                </div>
+
+                <div class="product-action">
+                  <span>{{ producto.stock ?? 0 }} unid.</span>
+                  <button
+                    type="button"
+                    class="primary-button"
+                    (click)="agregarProductoAlCarrito(producto.id)"
+                    [disabled]="tienda.actionLoading() || (producto.stock ?? 0) <= 0"
+                  >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M7 18a2 2 0 1 0 0 4 2 2 0 0 0 0-4m10 0a2 2 0 1 0 .1 0M7.2 14h8.9c.8 0 1.5-.5 1.8-1.2L21 5H6.2L5.7 3H2v2h2.1l3 11H19v-2z" />
+                    </svg>
+                    @if (tienda.actionLoading()) {
+                      Agregando
+                    } @else {
+                      Agregar al carro
+                    }
+                  </button>
+                </div>
+              </div>
+            </article>
+          } @empty {
+            <div class="empty-state">
+              <h3>No encontramos productos</h3>
+              <p>Prueba con otra busqueda o limpia los filtros.</p>
+            </div>
+          }
+        </div>
+      }
+    </section>
+  </section>
+
+  <section id="estado-orden" class="order-status">
+    <div class="order-head">
+      <div>
+        <p>Seguimiento</p>
+        <h2>Estado de orden</h2>
+      </div>
+      @if (tienda.lastOrderId()) {
+        <span>Orden #{{ tienda.lastOrderId() }}</span>
+      }
+    </div>
+
+    @if (tienda.orderSyncLoading()) {
+      <p class="muted">Consultando estado de orden...</p>
+    }
+
+    @if (tienda.orderSyncError()) {
+      <p class="message inline error">{{ tienda.orderSyncError() }}</p>
+      <button type="button" class="outline-button" (click)="reintentarEstadoOrden()">Reintentar</button>
+    }
+
+    @if (tienda.selectedOrder(); as orden) {
+      <div class="order-card">
+        <p><strong>ID:</strong> {{ orden.id }}</p>
+        <p><strong>Estado:</strong> {{ orden.status }}</p>
+        <p><strong>Total:</strong> {{ orden.total | currency: 'CLP' : 'symbol' : '1.0-0' }}</p>
+        <p><strong>Items:</strong> {{ orden.items.length }}</p>
+        @if (orden.payment_attempts.length > 0) {
+          <p><strong>Pago:</strong> {{ orden.payment_attempts[orden.payment_attempts.length - 1].status }}</p>
+        }
+        @if (orden.payment_attempts.length > 0 && orden.payment_attempts[orden.payment_attempts.length - 1].payment_url) {
+          <a [href]="orden.payment_attempts[orden.payment_attempts.length - 1].payment_url" target="_blank" rel="noopener">
+            Abrir pasarela de pago
+          </a>
+        }
+      </div>
+    } @else if (!tienda.orderSyncLoading()) {
+      <p class="muted">Cuando completes un checkout, la orden aparecera en esta seccion.</p>
+    }
+  </section>
+
+  @if (carritoAbierto()) {
+    <div class="drawer-backdrop" (click)="cerrarCarrito()"></div>
+    <aside class="cart-drawer" aria-label="Carrito de compras">
+      <div class="drawer-head">
+        <div>
+          <p>Mi carrito</p>
+          <h2>{{ cantidadCarrito() }} productos</h2>
+        </div>
+        <button type="button" class="icon-button" (click)="cerrarCarrito()" aria-label="Cerrar carrito">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="m18.3 5.7-1.4-1.4L12 9.2 7.1 4.3 5.7 5.7l4.9 4.9-4.9 4.9 1.4 1.4 4.9-4.9 4.9 4.9 1.4-1.4-4.9-4.9z" />
+          </svg>
+        </button>
+      </div>
+
+      @if (tienda.cartError()) {
+        <p class="message inline error">{{ tienda.cartError() }}</p>
+      }
+
+      @if (tienda.loadingCart()) {
+        <p class="muted">Actualizando carrito...</p>
+      } @else if (itemsCarrito().length === 0) {
+        <div class="empty-cart">
+          <h3>Tu carrito esta vacio</h3>
+          <p>Agrega productos desde el catalogo para continuar.</p>
+        </div>
+      } @else {
+        <ul class="cart-list">
+          @for (item of itemsCarrito(); track item.id) {
+            <li>
+              <div>
+                <h3>{{ item.product?.name || ('Producto #' + item.product_id) }}</h3>
+                <p>{{ obtenerPrecioItem(item) | currency: 'CLP' : 'symbol' : '1.0-0' }} x {{ item.quantity }}</p>
+              </div>
+              <strong>{{ obtenerTotalItem(item) | currency: 'CLP' : 'symbol' : '1.0-0' }}</strong>
+              <div class="quantity-actions">
+                <button type="button" (click)="disminuirCantidad(item)" [disabled]="tienda.actionLoading()">-</button>
+                <span>{{ item.quantity }}</span>
+                <button type="button" (click)="aumentarCantidad(item)" [disabled]="tienda.actionLoading()">+</button>
+                <button type="button" class="remove-button" (click)="eliminarItemCarrito(item.id)" [disabled]="tienda.actionLoading()">
+                  Quitar
+                </button>
+              </div>
+            </li>
+          }
+        </ul>
+
+        <div class="checkout-box">
+          <p>Total <strong>{{ subtotalCarrito() | currency: 'CLP' : 'symbol' : '1.0-0' }}</strong></p>
+          <button type="button" class="primary-button" (click)="irAPagar()" [disabled]="tienda.checkoutLoading()">
+            @if (tienda.checkoutLoading()) {
+              Conectando pago
+            } @else {
+              Ir a pagar
+            }
+          </button>
+        </div>
+      }
+
+      @if (tienda.checkoutError()) {
+        <p class="message inline error">{{ tienda.checkoutError() }}</p>
+      }
+    </aside>
+  }
+
+  @if (modalSesionAbierto()) {
+    <div class="modal-backdrop" (click)="cerrarModalSesion()">
+      <section class="auth-modal" role="dialog" aria-modal="true" aria-label="Inicio de sesion" (click)="$event.stopPropagation()">
+        <div class="modal-head">
+          <div>
+            <p>Cuenta cliente</p>
+            <h2>{{ modoAutenticacion() === 'login' ? 'Iniciar sesion' : 'Crear cuenta' }}</h2>
+          </div>
+          <button type="button" class="icon-button" (click)="cerrarModalSesion()" aria-label="Cerrar inicio de sesion">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m18.3 5.7-1.4-1.4L12 9.2 7.1 4.3 5.7 5.7l4.9 4.9-4.9 4.9 1.4 1.4 4.9-4.9 4.9 4.9 1.4-1.4-4.9-4.9z" />
+            </svg>
+          </button>
+        </div>
+
+        <p class="modal-reason">{{ motivoSesion() }}</p>
+
+        @if (tienda.authError()) {
+          <p class="message inline error">{{ tienda.authError() }}</p>
+        }
+        @if (tienda.successMessage()) {
+          <p class="message inline success">{{ tienda.successMessage() }}</p>
+        }
+
+        <div class="auth-tabs" role="tablist" aria-label="Alternar login y registro">
+          <button type="button" [class.active]="modoAutenticacion() === 'login'" (click)="cambiarModoAutenticacion('login')">
+            Iniciar sesion
+          </button>
+          <button type="button" [class.active]="modoAutenticacion() === 'register'" (click)="cambiarModoAutenticacion('register')">
+            Crear cuenta
+          </button>
+        </div>
+
+        @if (modoAutenticacion() === 'login') {
+          <form [formGroup]="formularioLogin" (ngSubmit)="iniciarSesion()" class="auth-form">
+            <label>
+              Correo
+              <input type="email" formControlName="email" placeholder="correo@dominio.cl" />
+            </label>
+            <label>
+              Contrasena
+              <input type="password" formControlName="password" placeholder="Ingresa tu clave" />
+            </label>
+            <button type="submit" class="primary-button" [disabled]="tienda.authSubmitting()">
+              @if (tienda.authSubmitting()) {
+                Validando
+              } @else {
+                Entrar
+              }
+            </button>
+          </form>
+        } @else {
+          <form [formGroup]="formularioRegistro" (ngSubmit)="registrarCuenta()" class="auth-form">
+            <label>
+              Nombre
+              <input type="text" formControlName="full_name" placeholder="Nombre y apellido" />
+            </label>
+            <label>
+              Correo
+              <input type="email" formControlName="email" placeholder="correo@dominio.cl" />
+            </label>
+            <label>
+              Contrasena
+              <input type="password" formControlName="password" placeholder="Minimo 8 caracteres" />
+            </label>
+            <button type="submit" class="primary-button" [disabled]="tienda.authSubmitting()">
+              @if (tienda.authSubmitting()) {
+                Registrando
+              } @else {
+                Crear cuenta
+              }
+            </button>
+          </form>
+        }
+      </section>
+    </div>
+  }
+</main>

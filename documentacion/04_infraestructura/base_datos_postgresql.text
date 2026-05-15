@@ -57,7 +57,7 @@ Reiniciar la base local desde cero
 Desde EV2-CLOUD:
 
   docker compose down -v
-  docker compose --profile payments up --build
+  docker compose up --build
 
 Advertencia:
   down -v elimina el volumen postgres_data y borra datos locales.

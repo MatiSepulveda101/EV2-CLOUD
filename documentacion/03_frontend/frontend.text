@@ -1,0 +1,63 @@
+FRONTEND
+========
+
+Ruta
+----
+frontend/
+
+Tecnologia
+----------
+Angular
+TypeScript
+Nginx para servir build productivo en Docker
+
+Responsabilidad
+---------------
+El frontend es la tienda visible para el usuario.
+
+Se encarga de:
+  Mostrar productos sin requerir inicio de sesion.
+  Filtrar productos por busqueda y categoria.
+  Pedir inicio de sesion solo cuando el usuario intenta comprar.
+  Administrar visualmente el carrito.
+  Enviar acciones al backend.
+  Redirigir al checkout externo cuando el backend entrega una URL de pago.
+
+Flujo de sesion
+---------------
+El usuario puede navegar el catalogo libremente.
+
+Se solicita sesion cuando:
+  presiona Agregar al carro,
+  abre el carrito,
+  abre Mis compras.
+
+Esto mantiene el catalogo publico y protege operaciones que necesitan identidad.
+
+Conexion con backend
+--------------------
+El cliente HTTP apunta a:
+
+  http://127.0.0.1:8000
+
+En Docker, el navegador sigue usando localhost/127.0.0.1 porque el backend esta
+publicado en el puerto 8000 del computador.
+
+Docker
+------
+frontend/Dockerfile:
+  Construye Angular con Node.
+  Copia el resultado a Nginx.
+
+frontend/nginx.conf:
+  Sirve index.html.
+  Permite refrescar rutas de Angular sin error 404.
+
+Puerto:
+  http://localhost:4200
+
+Comando recomendado
+-------------------
+Desde la raiz:
+
+  docker compose up --build

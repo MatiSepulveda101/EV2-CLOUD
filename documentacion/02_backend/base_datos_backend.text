@@ -3,7 +3,8 @@ BASE DE DATOS DEL BACKEND
 
 Conexion
 --------
-El backend usa DATABASE_URL desde backend/.env.
+El backend usa DATABASE_URL desde variables de entorno.
+En Docker Compose viene configurada por defecto y apunta a postgres-db.
 
 En Docker:
   postgresql+psycopg://postgres:postgres@postgres-db:5432/ecommerce

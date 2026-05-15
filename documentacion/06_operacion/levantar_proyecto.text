@@ -15,40 +15,43 @@ En PowerShell:
 Si esos comandos fallan, Docker no esta disponible en la terminal.
 
 
-Levantar backend y base
------------------------
-Sirve para probar:
-  salud,
-  usuarios,
-  login,
-  productos,
-  carrito.
+Levantar todo
+-------------
+Desde la raiz EV2-CLOUD:
 
-Comando:
+  docker compose up --build
 
-  docker compose up --build postgres-db backend
-
-URLs:
-  http://localhost:8000/docs
-  http://localhost:8000/health
-
-
-Levantar todo con pagos
------------------------
-Antes:
-  Editar backend/.env.
-  Configurar MP_ACCESS_TOKEN.
-  Configurar MP_PUBLIC_KEY.
-
-Comando:
-
-  docker compose --profile payments up --build
+Servicios levantados:
+  frontend
+  backend
+  postgres-db
+  app-pagos
 
 URLs:
-  http://localhost:8000/docs
-  http://localhost:8002/docs
-  http://localhost:8000/health
-  http://localhost:8002/health
+  Frontend:       http://localhost:4200
+  Backend docs:   http://localhost:8000/docs
+  Backend health: http://localhost:8000/health
+  Pagos docs:     http://localhost:8002/docs
+  Pagos health:   http://localhost:8002/health
+
+
+Configurar pagos reales
+-----------------------
+El proyecto inicia sin credenciales de MercadoPago, pero checkout real requiere
+MP_ACCESS_TOKEN.
+
+Crear .env desde la plantilla:
+
+  Copy-Item .env.example .env
+
+Editar .env y completar:
+
+  MP_ACCESS_TOKEN=...
+  MP_PUBLIC_KEY=...
+
+Volver a levantar:
+
+  docker compose up --build
 
 
 Detener contenedores
@@ -63,16 +66,19 @@ Advertencia:
   down -v elimina los datos locales de PostgreSQL.
 
 
-Ejecutar backend sin Docker
+Desarrollo local sin Docker
 ---------------------------
-Desde EV2-CLOUD:
+Solo usar esto si se quiere trabajar un servicio manualmente.
+
+Backend:
 
   cd backend
   python -m venv .venv
   .\.venv\Scripts\python.exe -m pip install -r requirements.txt
-  $env:DATABASE_URL="sqlite+pysqlite:///./dev.db"
-  $env:JWT_SECRET_KEY="local-secret-key-with-enough-length"
   .\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8000
 
-URL:
-  http://127.0.0.1:8000/docs
+Frontend:
+
+  cd frontend
+  npm install
+  npm start

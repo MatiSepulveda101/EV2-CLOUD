@@ -5,9 +5,11 @@ Raiz del proyecto
 -----------------
 EV2-CLOUD/
   backend/
+  frontend/
   microservicios/
   infraestructura/
   documentacion/
+  .env.example
   docker-compose.yml
   README.md
 
@@ -19,11 +21,9 @@ Elementos importantes:
   backend/app/
     Codigo fuente de la API.
 
-  backend/.env
-    Variables locales del backend y del ambiente Docker.
-
   backend/.env.example
-    Plantilla para recrear backend/.env.
+    Plantilla historica del backend. Para Docker se recomienda usar .env.example
+    de la raiz.
 
   backend/.venv/
     Entorno virtual local del backend.
@@ -34,6 +34,20 @@ Elementos importantes:
 
   backend/requirements.txt
     Dependencias Python del backend.
+
+frontend/
+---------
+Contiene la aplicacion Angular de la tienda.
+
+Elementos importantes:
+  frontend/src/
+    Codigo fuente de la interfaz.
+
+  frontend/Dockerfile
+    Construye Angular y sirve la app con Nginx.
+
+  frontend/nginx.conf
+    Configuracion para servir la SPA.
 
 microservicios/
 ---------------
@@ -66,8 +80,9 @@ Contiene documentacion tecnica separada por tema.
 docker-compose.yml
 ------------------
 Archivo de orquestacion local. Permite levantar:
-  postgres-db
+  frontend
   backend
+  postgres-db
   app-pagos
 
 README.md

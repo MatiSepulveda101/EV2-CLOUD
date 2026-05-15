@@ -10,3 +10,6 @@ venv/
 *.db
 *.log
 postgres_data/
+node_modules/
+dist/
+.angular/

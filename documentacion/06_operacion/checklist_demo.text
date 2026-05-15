@@ -7,19 +7,22 @@ Confirmar Docker:
   docker --version
   docker compose version
 
-Confirmar variables:
-  backend/.env existe.
-  MP_ACCESS_TOKEN esta configurado si se mostrara checkout real.
-  MP_PUBLIC_KEY esta configurado para health completo y pagos directos.
+Opcional para checkout real:
+  Crear .env desde .env.example.
+  Configurar MP_ACCESS_TOKEN.
+  Configurar MP_PUBLIC_KEY.
 
 Reiniciar base si es necesario:
   docker compose down -v
 
 Levantar servicios:
-  docker compose --profile payments up --build
+  docker compose up --build
 
 URLs a abrir
 ------------
+Frontend:
+  http://localhost:4200
+
 Backend:
   http://localhost:8000/docs
 
@@ -32,8 +35,19 @@ Health backend:
 Health pagos:
   http://localhost:8002/health
 
-Demo funcional
---------------
+Demo funcional desde frontend
+-----------------------------
+1. Abrir http://localhost:4200.
+2. Ver productos sin iniciar sesion.
+3. Presionar Agregar al carro.
+4. Iniciar sesion o crear cuenta cuando aparezca el modal.
+5. Agregar productos al carrito.
+6. Abrir el carrito.
+7. Ir a pagar.
+8. Volver y revisar estado de orden.
+
+Demo funcional desde Swagger
+----------------------------
 1. Registrar usuario:
    POST /auth/register
 
@@ -64,9 +78,10 @@ Demo funcional
 
 Puntos tecnicos para explicar
 -----------------------------
+El frontend consume el backend por HTTP.
 El backend principal maneja negocio del ecommerce.
 app-pagos maneja la integracion de pagos y no usa base de datos propia.
 PostgreSQL guarda los datos del backend.
-Docker Compose conecta los servicios.
+Docker Compose conecta los servicios en una red interna.
 La comunicacion backend -> app-pagos usa HTTP interno.
 La estructura esta preparada para migrar a ECR, ECS y RDS.

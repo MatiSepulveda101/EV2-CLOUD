@@ -1,64 +1,78 @@
 DOCKER COMPOSE
 ==============
 
-Archivo
--------
+Archivo principal
+-----------------
 docker-compose.yml
+
+Objetivo
+--------
+Levantar el entorno completo con un solo comando:
+
+  docker compose up --build
 
 Servicios
 ---------
-postgres-db:
-  Imagen: postgres:15-alpine.
-  Puerto local: 5432.
-  Usa variables desde backend/.env.
-  Guarda datos en el volumen postgres_data.
+frontend:
+  Aplicacion Angular servida por Nginx.
+  Se construye desde frontend/Dockerfile.
+  Puerto local: 4200.
+  URL: http://localhost:4200
 
 backend:
+  API principal FastAPI.
   Se construye desde backend/Dockerfile.
   Puerto local: 8000.
-  Usa variables desde backend/.env.
-  Depende de postgres-db saludable.
+  URL: http://localhost:8000/docs
+  Crea tablas y productos demo al iniciar si las variables lo permiten.
+
+postgres-db:
+  Base PostgreSQL local compatible con RDS.
+  Imagen: postgres:15-alpine.
+  Puerto local: 5432.
+  Guarda datos en el volumen postgres_data.
 
 app-pagos:
+  Microservicio de pagos.
   Se construye desde microservicios/app-pagos/Dockerfile.
   Puerto local: 8002.
-  Usa variables desde backend/.env.
-  Usa el perfil payments.
-  No depende de PostgreSQL.
+  URL: http://localhost:8002/docs
 
-Red
----
+Variables
+---------
+El compose trae valores por defecto de desarrollo, por eso puede iniciar sin
+crear archivos extra.
+
+Si se crea un archivo .env en la raiz, Docker Compose lo toma automaticamente.
+Ese archivo se usa para sobrescribir secretos o configuraciones:
+
+  MP_ACCESS_TOKEN
+  MP_PUBLIC_KEY
+  JWT_SECRET_KEY
+  POSTGRES_PASSWORD
+
+Red interna
+-----------
 Todos los servicios comparten:
 
   microservices-network
 
-Esto permite que backend llame a app-pagos usando:
+El backend llama a pagos usando:
 
   http://app-pagos:8002
 
-Y que el backend llame a PostgreSQL usando:
+El backend llama a PostgreSQL usando:
 
   postgres-db:5432
 
 Volumen
 -------
-postgres_data:
-  Guarda datos de PostgreSQL fuera del ciclo de vida del contenedor.
-  Si el contenedor se elimina pero el volumen sigue existiendo, la base mantiene
-  los datos.
+postgres_data guarda los datos locales de PostgreSQL.
 
-Creacion de tablas
-------------------
-El backend crea sus propias tablas al iniciar cuando:
-
-  AUTO_CREATE_TABLES=true
-
-Reiniciar PostgreSQL local
---------------------------
-Si necesitas partir con una base limpia:
+Para reiniciar la base:
 
   docker compose down -v
-  docker compose --profile payments up --build
+  docker compose up --build
 
 Advertencia:
-  docker compose down -v borra los datos locales de PostgreSQL.
+  docker compose down -v borra los datos locales.

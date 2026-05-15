@@ -3,12 +3,17 @@ VISION GENERAL DE ARQUITECTURA
 
 Objetivo
 --------
-El proyecto implementa la base backend de un ecommerce con arquitectura de
+El proyecto implementa un ecommerce full stack con arquitectura de
 microservicios. La aplicacion principal maneja la logica de negocio y delega los
 pagos a un servicio especializado.
 
 Componentes
 -----------
+frontend:
+  Tienda Angular.
+  Muestra productos sin login y solicita sesion al agregar al carrito o revisar
+  compras.
+
 backend:
   API principal del ecommerce.
   Expone autenticacion, productos, carrito, checkout y ordenes.
@@ -63,6 +68,9 @@ nombre de servicio:
 
 Puertos publicados
 ------------------
+Frontend:
+  http://localhost:4200
+
 Backend:
   http://localhost:8000
 

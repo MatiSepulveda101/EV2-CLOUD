@@ -37,7 +37,9 @@ app/main.py:
   Carga productos demo si AUTO_SEED_PRODUCTS=true.
 
 app/config.py:
-  Lee configuracion desde backend/.env.
+  Lee configuracion desde variables de entorno.
+  En Docker estas variables vienen desde docker-compose.yml y, si existe, desde
+  el .env de la raiz.
 
 app/database.py:
   Crea el motor de SQLAlchemy y las sesiones de base de datos.

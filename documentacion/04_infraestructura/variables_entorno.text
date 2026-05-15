@@ -1,15 +1,16 @@
 VARIABLES DE ENTORNO
 ====================
 
-Archivo
--------
-backend/.env
+Archivo recomendado
+-------------------
+.env en la raiz del proyecto.
 
-Aunque el archivo este dentro de backend/, Docker Compose lo usa para varios
-servicios:
-  backend
-  postgres-db
-  app-pagos
+No se versiona. Se crea copiando:
+
+  Copy-Item .env.example .env
+
+Docker Compose tambien puede iniciar sin .env porque docker-compose.yml define
+valores por defecto para desarrollo.
 
 Base de datos
 -------------
@@ -24,6 +25,9 @@ POSTGRES_PASSWORD:
 
 DATABASE_URL:
   Conexion del backend principal a PostgreSQL.
+  En Docker apunta a postgres-db:5432.
+  docker-compose.yml la genera desde POSTGRES_USER, POSTGRES_PASSWORD y
+  POSTGRES_DB.
 
 Backend
 -------
@@ -43,6 +47,7 @@ Pagos
 -----
 APP_PAGOS_URL:
   URL usada por el backend para llamar a app-pagos.
+  En Docker normalmente es http://app-pagos:8002.
 
 MP_ACCESS_TOKEN:
   Access token de MercadoPago.
@@ -65,6 +70,6 @@ MP_PENDING_URL:
 Buenas practicas
 ----------------
 No usar secretos reales en archivos versionados.
-Usar backend/.env.example como plantilla.
+Usar .env.example como plantilla.
 En AWS, mover JWT_SECRET_KEY, MP_ACCESS_TOKEN y MP_PUBLIC_KEY a un gestor de
 secretos.
