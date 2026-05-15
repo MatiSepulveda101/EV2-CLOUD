@@ -1,0 +1,70 @@
+VARIABLES DE ENTORNO
+====================
+
+Archivo
+-------
+backend/.env
+
+Aunque el archivo este dentro de backend/, Docker Compose lo usa para varios
+servicios:
+  backend
+  postgres-db
+  app-pagos
+
+Base de datos
+-------------
+POSTGRES_DB:
+  Nombre de la base local.
+
+POSTGRES_USER:
+  Usuario de PostgreSQL.
+
+POSTGRES_PASSWORD:
+  Password de PostgreSQL.
+
+DATABASE_URL:
+  Conexion del backend principal a PostgreSQL.
+
+Backend
+-------
+JWT_SECRET_KEY:
+  Clave para firmar tokens JWT.
+
+CORS_ORIGINS:
+  URLs permitidas para llamadas desde frontend.
+
+AUTO_CREATE_TABLES:
+  Si esta en true, el backend crea tablas al iniciar.
+
+AUTO_SEED_PRODUCTS:
+  Si esta en true, carga productos demo.
+
+Pagos
+-----
+APP_PAGOS_URL:
+  URL usada por el backend para llamar a app-pagos.
+
+MP_ACCESS_TOKEN:
+  Access token de MercadoPago.
+
+MP_PUBLIC_KEY:
+  Public key de MercadoPago.
+
+MP_WEBHOOK_URL:
+  URL webhook para notificaciones de pago.
+
+MP_SUCCESS_URL:
+  URL de retorno para pago exitoso.
+
+MP_FAILURE_URL:
+  URL de retorno para pago fallido.
+
+MP_PENDING_URL:
+  URL de retorno para pago pendiente.
+
+Buenas practicas
+----------------
+No usar secretos reales en archivos versionados.
+Usar backend/.env.example como plantilla.
+En AWS, mover JWT_SECRET_KEY, MP_ACCESS_TOKEN y MP_PUBLIC_KEY a un gestor de
+secretos.

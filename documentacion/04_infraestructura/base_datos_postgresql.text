@@ -1,0 +1,63 @@
+POSTGRESQL E INFRAESTRUCTURA DE BASE DE DATOS
+=============================================
+
+Servicio
+--------
+postgres-db
+
+Objetivo
+--------
+Proveer una base PostgreSQL local para el backend principal.
+
+Estado actual
+-------------
+No hay script SQL obligatorio.
+
+El backend crea sus tablas al iniciar con SQLAlchemy cuando:
+
+  AUTO_CREATE_TABLES=true
+
+app-pagos no usa PostgreSQL en esta version.
+
+Servicio Docker
+---------------
+Nombre:
+  postgres-db
+
+Imagen:
+  postgres:15-alpine
+
+Puerto:
+  5432
+
+Volumen:
+  postgres_data
+
+Tablas creadas por el backend
+-----------------------------
+users
+products
+carts
+cart_items
+orders
+order_items
+payment_attempts
+
+Por que existe infraestructura/
+-------------------------------
+Esta carpeta deja preparado el proyecto para recursos de ambiente y despliegue:
+  scripts de migracion,
+  configuracion cloud,
+  archivos Terraform,
+  definiciones ECS,
+  documentacion de RDS.
+
+Reiniciar la base local desde cero
+----------------------------------
+Desde EV2-CLOUD:
+
+  docker compose down -v
+  docker compose --profile payments up --build
+
+Advertencia:
+  down -v elimina el volumen postgres_data y borra datos locales.

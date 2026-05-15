@@ -1,0 +1,34 @@
+DOCUMENTACION TECNICA DEL PROYECTO
+==================================
+
+Esta carpeta documenta el proyecto desde una mirada de desarrollo y operacion.
+Los archivos estan separados por tema para que sea facil mantenerlos y usarlos
+durante la implementacion, la demo y el despliegue.
+
+Orden recomendado de lectura:
+  1. 01_arquitectura/vision_general.text
+  2. 01_arquitectura/estructura_carpetas.text
+  3. 02_backend/resumen_backend.text
+  4. 03_microservicios/app_pagos.text
+  5. 04_infraestructura/base_datos_postgresql.text
+  6. 05_flujos/flujo_compra.text
+  7. 06_operacion/levantar_proyecto.text
+
+Carpetas:
+  01_arquitectura
+    Explica la arquitectura general, carpetas y Docker Compose.
+
+  02_backend
+    Explica la API principal FastAPI, endpoints, base de datos y seguridad.
+
+  03_microservicios
+    Explica servicios externos o internos que complementan al backend.
+
+  04_infraestructura
+    Explica PostgreSQL, variables de entorno y preparacion para nube.
+
+  05_flujos
+    Explica los flujos funcionales entre componentes.
+
+  06_operacion
+    Explica como levantar, validar y presentar el proyecto.

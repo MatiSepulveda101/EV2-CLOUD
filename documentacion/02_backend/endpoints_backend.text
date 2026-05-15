@@ -1,0 +1,74 @@
+ENDPOINTS DEL BACKEND
+=====================
+
+Salud
+-----
+GET /health
+  Verifica que el backend este levantado.
+
+
+Autenticacion
+-------------
+POST /auth/register
+  Crea un usuario.
+  Tambien crea su carrito inicial.
+
+POST /auth/login
+  Valida email y password.
+  Retorna access_token JWT.
+
+
+Productos
+---------
+GET /products
+  Lista productos activos.
+
+GET /products/{product_id}
+  Obtiene un producto por ID.
+
+
+Carrito
+-------
+GET /cart
+  Requiere JWT.
+  Retorna el carrito del usuario autenticado.
+
+POST /cart/items
+  Requiere JWT.
+  Agrega un producto al carrito.
+
+PATCH /cart/items/{item_id}
+  Requiere JWT.
+  Actualiza la cantidad de un item del carrito.
+
+DELETE /cart/items/{item_id}
+  Requiere JWT.
+  Elimina un item del carrito.
+
+
+Checkout
+--------
+POST /checkout
+  Requiere JWT.
+  Crea una orden pendiente.
+  Llama a app-pagos.
+  Retorna una URL de pago.
+
+
+Ordenes
+-------
+GET /orders/{order_id}
+  Requiere JWT.
+  Retorna una orden del usuario autenticado.
+  Si la orden esta pendiente, intenta sincronizar el estado con app-pagos.
+
+
+Autenticacion en rutas protegidas
+---------------------------------
+Enviar header:
+
+  Authorization: Bearer TOKEN
+
+El token viene desde:
+
+  POST /auth/login

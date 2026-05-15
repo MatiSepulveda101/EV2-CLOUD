@@ -1,0 +1,59 @@
+AUTENTICACION Y SEGURIDAD
+=========================
+
+Registro
+--------
+El usuario se registra con:
+  email
+  full_name
+  password
+
+El password no se guarda en texto plano.
+Se guarda usando hash bcrypt.
+
+Login
+-----
+El usuario inicia sesion con:
+  email
+  password
+
+Si las credenciales son correctas, el backend devuelve:
+  access_token
+  token_type
+  user
+
+JWT
+---
+El access_token es un JWT firmado con JWT_SECRET_KEY.
+
+La expiracion se configura con:
+  ACCESS_TOKEN_EXPIRE_MINUTES
+
+Si no se define, se usa el valor por defecto del backend.
+
+Uso del token
+-------------
+Para llamar rutas protegidas:
+
+  Authorization: Bearer TOKEN
+
+Rutas protegidas
+----------------
+GET /cart
+POST /cart/items
+PATCH /cart/items/{item_id}
+DELETE /cart/items/{item_id}
+POST /checkout
+GET /orders/{order_id}
+
+Responsabilidad del frontend
+----------------------------
+El frontend debe:
+  Guardar el token despues del login.
+  Enviarlo en rutas protegidas.
+  Borrarlo al cerrar sesion.
+
+Nota de seguridad
+-----------------
+JWT_SECRET_KEY no debe subirse con valores productivos.
+En AWS deberia configurarse como secreto.

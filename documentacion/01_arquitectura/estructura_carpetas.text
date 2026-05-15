@@ -1,0 +1,75 @@
+ESTRUCTURA DE CARPETAS
+======================
+
+Raiz del proyecto
+-----------------
+EV2-CLOUD/
+  backend/
+  microservicios/
+  infraestructura/
+  documentacion/
+  docker-compose.yml
+  README.md
+
+backend/
+--------
+Contiene la API principal FastAPI.
+
+Elementos importantes:
+  backend/app/
+    Codigo fuente de la API.
+
+  backend/.env
+    Variables locales del backend y del ambiente Docker.
+
+  backend/.env.example
+    Plantilla para recrear backend/.env.
+
+  backend/.venv/
+    Entorno virtual local del backend.
+    No se sube al repositorio.
+
+  backend/Dockerfile
+    Imagen Docker del backend.
+
+  backend/requirements.txt
+    Dependencias Python del backend.
+
+microservicios/
+---------------
+Contiene servicios independientes que complementan al backend.
+
+Actualmente:
+  microservicios/app-pagos/
+    Servicio stateless de pagos con MercadoPago.
+
+infraestructura/
+----------------
+Espacio reservado para recursos de ambiente y despliegue.
+
+En esta version no contiene scripts SQL obligatorios porque:
+  el backend crea sus tablas con SQLAlchemy,
+  app-pagos no usa base de datos,
+  PostgreSQL se configura desde docker-compose.yml.
+
+Mas adelante puede contener:
+  plantillas ECS,
+  Terraform,
+  scripts de RDS,
+  configuraciones de red,
+  documentacion operativa de nube.
+
+documentacion/
+--------------
+Contiene documentacion tecnica separada por tema.
+
+docker-compose.yml
+------------------
+Archivo de orquestacion local. Permite levantar:
+  postgres-db
+  backend
+  app-pagos
+
+README.md
+---------
+Guia rapida. La explicacion detallada vive en documentacion/.

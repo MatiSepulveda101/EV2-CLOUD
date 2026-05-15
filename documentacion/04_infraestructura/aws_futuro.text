@@ -1,0 +1,64 @@
+DESPLIEGUE FUTURO EN AWS
+========================
+
+Objetivo
+--------
+La version local usa Docker Compose. Para nube, la misma separacion se puede
+llevar a AWS.
+
+Servicios AWS sugeridos
+-----------------------
+ECR:
+  Guardar imagenes Docker de backend y app-pagos.
+
+ECS Fargate:
+  Ejecutar contenedores sin administrar servidores.
+
+RDS PostgreSQL:
+  Base de datos administrada para reemplazar postgres-db local.
+
+CloudWatch:
+  Logs de contenedores.
+
+GitHub Actions:
+  Build, push a ECR y deploy a ECS.
+
+Mapeo local a AWS
+-----------------
+backend local:
+  Servicio ECS backend.
+
+app-pagos local:
+  Servicio ECS app-pagos.
+
+postgres-db local:
+  RDS PostgreSQL.
+
+docker-compose.yml:
+  Task Definitions y Services en ECS.
+
+Variables que cambiarian
+------------------------
+DATABASE_URL:
+  Apuntaria a RDS.
+
+APP_PAGOS_URL:
+  URL interna o service discovery de app-pagos.
+
+JWT_SECRET_KEY:
+  Secreto en AWS.
+
+MP_ACCESS_TOKEN:
+  Secreto en AWS.
+
+MP_PUBLIC_KEY:
+  Configuracion/secret de MercadoPago en AWS.
+
+CI/CD esperado
+--------------
+1. Push a GitHub.
+2. GitHub Actions construye imagen backend.
+3. GitHub Actions construye imagen app-pagos.
+4. Sube imagenes a ECR.
+5. Actualiza ECS Services.
+6. ECS descarga nuevas imagenes y despliega.

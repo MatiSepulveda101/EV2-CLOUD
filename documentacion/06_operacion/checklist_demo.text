@@ -1,0 +1,72 @@
+CHECKLIST DE DEMO
+=================
+
+Antes de la demo
+----------------
+Confirmar Docker:
+  docker --version
+  docker compose version
+
+Confirmar variables:
+  backend/.env existe.
+  MP_ACCESS_TOKEN esta configurado si se mostrara checkout real.
+  MP_PUBLIC_KEY esta configurado para health completo y pagos directos.
+
+Reiniciar base si es necesario:
+  docker compose down -v
+
+Levantar servicios:
+  docker compose --profile payments up --build
+
+URLs a abrir
+------------
+Backend:
+  http://localhost:8000/docs
+
+Pagos:
+  http://localhost:8002/docs
+
+Health backend:
+  http://localhost:8000/health
+
+Health pagos:
+  http://localhost:8002/health
+
+Demo funcional
+--------------
+1. Registrar usuario:
+   POST /auth/register
+
+2. Iniciar sesion:
+   POST /auth/login
+
+3. Copiar access_token.
+
+4. Autorizar Swagger con:
+   Bearer TOKEN
+
+5. Ver productos:
+   GET /products
+
+6. Agregar producto al carrito:
+   POST /cart/items
+
+7. Ver carrito:
+   GET /cart
+
+8. Crear checkout:
+   POST /checkout
+
+9. Abrir payment_url.
+
+10. Consultar orden:
+    GET /orders/{order_id}
+
+Puntos tecnicos para explicar
+-----------------------------
+El backend principal maneja negocio del ecommerce.
+app-pagos maneja la integracion de pagos y no usa base de datos propia.
+PostgreSQL guarda los datos del backend.
+Docker Compose conecta los servicios.
+La comunicacion backend -> app-pagos usa HTTP interno.
+La estructura esta preparada para migrar a ECR, ECS y RDS.

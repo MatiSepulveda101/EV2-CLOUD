@@ -1,0 +1,50 @@
+FLUJO DE DATOS ENTRE COMPONENTES
+================================
+
+Datos de usuario
+----------------
+Se crean en backend.
+Se guardan en la tabla users.
+El password se guarda con hash.
+
+Datos de productos
+------------------
+Se crean como datos demo al iniciar.
+Se guardan en products.
+
+Datos de carrito
+----------------
+El carrito pertenece a un usuario.
+Se guarda en:
+  carts
+  cart_items
+
+Datos de orden
+--------------
+Al hacer checkout, el backend transforma el carrito en orden.
+Se guarda en:
+  orders
+  order_items
+
+Los order_items copian nombre, precio y cantidad para mantener una fotografia
+del momento de compra.
+
+Datos de pago
+-------------
+El backend guarda el intento en:
+  payment_attempts
+
+app-pagos mantiene operaciones temporales en memoria y consulta/actualiza el
+estado mediante MercadoPago.
+
+Datos compartidos
+-----------------
+El backend y app-pagos no comparten tablas.
+La integracion se hace por HTTP.
+
+Regla importante
+----------------
+El backend principal no debe depender de tablas internas de app-pagos.
+La integracion entre ambos debe hacerse por HTTP.
+
+Esto mantiene la separacion de microservicios.

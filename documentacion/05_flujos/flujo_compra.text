@@ -1,0 +1,89 @@
+FLUJO COMPLETO DE COMPRA
+========================
+
+Resumen
+-------
+Este flujo describe como se conectan frontend, backend, app-pagos, PostgreSQL y
+MercadoPago durante una compra.
+
+Paso a paso
+-----------
+1. Registro
+   Frontend llama:
+     POST /auth/register
+
+   Backend:
+     Crea usuario.
+     Crea carrito vacio.
+
+2. Login
+   Frontend llama:
+     POST /auth/login
+
+   Backend:
+     Valida credenciales.
+     Devuelve access_token JWT.
+
+3. Catalogo
+   Frontend llama:
+     GET /products
+
+   Backend:
+     Lee productos desde base de datos.
+
+4. Carrito
+   Frontend llama:
+     POST /cart/items
+
+   Backend:
+     Valida usuario con JWT.
+     Valida producto.
+     Valida stock.
+     Agrega item al carrito.
+
+5. Checkout
+   Frontend llama:
+     POST /checkout
+
+   Backend:
+     Lee carrito.
+     Calcula total.
+     Crea orden en estado PENDING.
+     Copia items del carrito a order_items.
+
+6. Pago
+   Backend llama a app-pagos:
+     POST /pagos/crear
+
+   app-pagos:
+     Crea preferencia de pago.
+     Devuelve id_pago y url_pago.
+
+7. Respuesta al frontend
+   Backend devuelve:
+     order_id
+     payment_id
+     payment_url
+     payment_status
+
+8. Usuario paga
+   Frontend redirige o abre payment_url.
+
+9. Consulta de orden
+   Frontend llama:
+     GET /orders/{order_id}
+
+   Backend:
+     Consulta estado en app-pagos si la orden sigue pendiente.
+     Actualiza estado local.
+
+Estados finales
+---------------
+Pago aprobado:
+  Orden queda PAID.
+
+Pago rechazado:
+  Orden queda REJECTED.
+
+Pago pendiente:
+  Orden sigue PENDING.

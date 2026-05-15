@@ -1,0 +1,71 @@
+BASE DE DATOS DEL BACKEND
+=========================
+
+Conexion
+--------
+El backend usa DATABASE_URL desde backend/.env.
+
+En Docker:
+  postgresql+psycopg://postgres:postgres@postgres-db:5432/ecommerce
+
+En desarrollo local sin Docker se puede usar SQLite:
+  sqlite+pysqlite:///./dev.db
+
+Tablas del backend
+------------------
+users:
+  Usuarios registrados.
+
+products:
+  Productos disponibles para vender.
+
+carts:
+  Carrito asociado a cada usuario.
+
+cart_items:
+  Productos agregados al carrito.
+
+orders:
+  Ordenes de compra.
+
+order_items:
+  Copia de productos y precios dentro de una orden.
+  Se usa para que la orden mantenga el valor historico aunque el producto cambie
+  despues.
+
+payment_attempts:
+  Intentos de pago generados por checkout.
+  Guarda id de pago externo, URL de pago, estado y respuesta del servicio de
+  pagos.
+
+Creacion de tablas
+------------------
+Esta version basica no usa migraciones.
+
+Cuando AUTO_CREATE_TABLES=true:
+  FastAPI crea las tablas del backend al iniciar.
+
+Cuando AUTO_SEED_PRODUCTS=true:
+  FastAPI carga productos demo si la tabla products esta vacia.
+
+Estados de orden
+----------------
+PENDING:
+  Orden creada, pago pendiente.
+
+PAID:
+  Pago aprobado.
+
+REJECTED:
+  Pago rechazado, expirado o cancelado.
+
+CANCELLED:
+  Orden cancelada.
+
+Estados de pago
+---------------
+PENDING
+PAID
+REJECTED
+EXPIRED
+CANCELLED

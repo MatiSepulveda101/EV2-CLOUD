@@ -1,0 +1,78 @@
+INTEGRACION DEL BACKEND CON PAGOS
+=================================
+
+Archivo principal
+-----------------
+backend/app/services/payments.py
+
+Clase
+-----
+ClientePagos
+
+Responsabilidad
+---------------
+ClientePagos encapsula las llamadas HTTP desde el backend hacia el
+microservicio app-pagos.
+
+Variable usada
+--------------
+APP_PAGOS_URL
+
+En Docker:
+  http://app-pagos:8002
+
+Fuera de Docker, si app-pagos corre local:
+  http://localhost:8002
+
+Crear pago
+----------
+El backend llama:
+
+  POST /pagos/crear
+
+Datos enviados:
+  id_usuario
+  email_pagador
+  descripcion
+  monto
+
+Respuesta esperada:
+  id_pago
+  url_pago
+  external_reference
+
+El cliente tambien acepta respuestas donde esos datos vienen dentro de:
+
+  data
+
+Nota:
+  app-pagos tambien expone POST /pagos/directo/procesar para pago directo con
+  tarjeta. El backend principal conserva el flujo de checkout externo mediante
+  POST /pagos/crear para evitar manejar datos crudos de tarjeta.
+
+Consultar estado
+----------------
+El backend llama:
+
+  GET /pagos/{id_pago}/estado
+
+La respuesta esperada contiene un estado como:
+  PAGADO
+  PENDIENTE
+  RECHAZADO
+  EXPIRADO
+  CANCELADO
+
+Mapeo interno
+-------------
+PAGADO se transforma en PAID.
+RECHAZADO se transforma en REJECTED.
+EXPIRADO se transforma en EXPIRED.
+CANCELADO se transforma en CANCELLED.
+Otros valores quedan como PENDING.
+
+Por que el backend no procesa tarjetas
+--------------------------------------
+El backend principal no debe manejar datos crudos de tarjeta.
+La responsabilidad de pagos queda aislada en app-pagos y/o en el proveedor
+externo de pagos.

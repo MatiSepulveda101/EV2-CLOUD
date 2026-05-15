@@ -1,0 +1,80 @@
+VISION GENERAL DE ARQUITECTURA
+==============================
+
+Objetivo
+--------
+El proyecto implementa la base backend de un ecommerce con arquitectura de
+microservicios. La aplicacion principal maneja la logica de negocio y delega los
+pagos a un servicio especializado.
+
+Componentes
+-----------
+backend:
+  API principal del ecommerce.
+  Expone autenticacion, productos, carrito, checkout y ordenes.
+  Persiste datos en PostgreSQL.
+
+app-pagos:
+  Microservicio externo de pagos.
+  Crea pagos, consulta estados y se comunica con MercadoPago.
+  Es stateless: no usa base de datos propia.
+
+postgres-db:
+  Base PostgreSQL local para el backend principal.
+
+docker-compose.yml:
+  Orquestador local. Levanta contenedores, red, puertos y volumen de base de
+  datos.
+
+Responsabilidades
+-----------------
+El backend principal:
+  Gestiona usuarios.
+  Gestiona productos.
+  Gestiona carrito.
+  Crea ordenes.
+  Llama a app-pagos.
+  Guarda intentos de pago asociados a ordenes.
+
+El microservicio app-pagos:
+  Recibe solicitudes de pago.
+  Crea preferencias de pago.
+  Devuelve URL de pago.
+  Permite consultar estado del pago.
+  Mantiene operaciones temporales en memoria.
+
+PostgreSQL:
+  Guarda datos persistentes del backend.
+  Permite que usuarios, productos, carritos, ordenes e intentos de pago
+  sobrevivan a reinicios de contenedores.
+
+Comunicacion entre servicios
+----------------------------
+El frontend llama al backend por HTTP.
+El backend llama a app-pagos por HTTP.
+El backend usa PostgreSQL.
+app-pagos se comunica con MercadoPago.
+
+En Docker, los servicios no se llaman por localhost entre ellos. Se llaman por
+nombre de servicio:
+
+  backend -> http://app-pagos:8002
+  backend -> postgres-db:5432
+
+Puertos publicados
+------------------
+Backend:
+  http://localhost:8000
+
+app-pagos:
+  http://localhost:8002
+
+PostgreSQL:
+  localhost:5432
+
+Motivo de separacion
+--------------------
+Separar pagos del backend principal permite que el ecommerce tenga una API de
+negocio clara y que la logica de pagos viva en un componente especializado.
+Esto reduce acoplamiento y facilita desplegar o reemplazar el proveedor de pagos
+sin reescribir todo el backend.

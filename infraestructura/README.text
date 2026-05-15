@@ -1,0 +1,16 @@
+INFRAESTRUCTURA
+===============
+
+Esta carpeta queda reservada para recursos de ambiente y despliegue.
+
+En la version actual:
+  PostgreSQL se define en docker-compose.yml.
+  El backend crea sus tablas automaticamente con SQLAlchemy.
+  app-pagos no usa base de datos propia.
+
+Uso futuro esperado:
+  definiciones ECS,
+  configuracion RDS,
+  plantillas Terraform,
+  scripts de migracion,
+  documentacion operativa de nube.

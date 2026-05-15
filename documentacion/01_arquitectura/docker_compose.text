@@ -1,0 +1,64 @@
+DOCKER COMPOSE
+==============
+
+Archivo
+-------
+docker-compose.yml
+
+Servicios
+---------
+postgres-db:
+  Imagen: postgres:15-alpine.
+  Puerto local: 5432.
+  Usa variables desde backend/.env.
+  Guarda datos en el volumen postgres_data.
+
+backend:
+  Se construye desde backend/Dockerfile.
+  Puerto local: 8000.
+  Usa variables desde backend/.env.
+  Depende de postgres-db saludable.
+
+app-pagos:
+  Se construye desde microservicios/app-pagos/Dockerfile.
+  Puerto local: 8002.
+  Usa variables desde backend/.env.
+  Usa el perfil payments.
+  No depende de PostgreSQL.
+
+Red
+---
+Todos los servicios comparten:
+
+  microservices-network
+
+Esto permite que backend llame a app-pagos usando:
+
+  http://app-pagos:8002
+
+Y que el backend llame a PostgreSQL usando:
+
+  postgres-db:5432
+
+Volumen
+-------
+postgres_data:
+  Guarda datos de PostgreSQL fuera del ciclo de vida del contenedor.
+  Si el contenedor se elimina pero el volumen sigue existiendo, la base mantiene
+  los datos.
+
+Creacion de tablas
+------------------
+El backend crea sus propias tablas al iniciar cuando:
+
+  AUTO_CREATE_TABLES=true
+
+Reiniciar PostgreSQL local
+--------------------------
+Si necesitas partir con una base limpia:
+
+  docker compose down -v
+  docker compose --profile payments up --build
+
+Advertencia:
+  docker compose down -v borra los datos locales de PostgreSQL.

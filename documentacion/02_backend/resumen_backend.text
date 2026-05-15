@@ -1,0 +1,72 @@
+BACKEND PRINCIPAL
+=================
+
+Ruta
+----
+backend/
+
+Tecnologia
+----------
+Python
+FastAPI
+SQLAlchemy
+Pydantic
+JWT
+PostgreSQL
+
+Responsabilidad
+---------------
+El backend principal contiene la logica de negocio del ecommerce.
+
+Se encarga de:
+  Registrar usuarios.
+  Iniciar sesion.
+  Exponer productos.
+  Administrar carrito.
+  Crear ordenes de compra.
+  Solicitar pagos al microservicio app-pagos.
+  Consultar y sincronizar estados de pago.
+
+Archivos principales
+--------------------
+app/main.py:
+  Crea la aplicacion FastAPI.
+  Registra routers.
+  Configura CORS.
+  Crea tablas al iniciar si AUTO_CREATE_TABLES=true.
+  Carga productos demo si AUTO_SEED_PRODUCTS=true.
+
+app/config.py:
+  Lee configuracion desde backend/.env.
+
+app/database.py:
+  Crea el motor de SQLAlchemy y las sesiones de base de datos.
+
+app/models.py:
+  Define modelos y tablas.
+
+app/schemas.py:
+  Define contratos de entrada y salida.
+
+app/security.py:
+  Maneja hash de passwords y tokens JWT.
+
+app/deps.py:
+  Valida usuario autenticado.
+
+app/seed.py:
+  Carga productos demo.
+
+app/routers/:
+  Endpoints agrupados por dominio.
+
+app/services/:
+  Logica auxiliar y cliente HTTP para pagos.
+
+Puerto
+------
+Local:
+  http://localhost:8000
+
+Documentacion interactiva:
+  http://localhost:8000/docs

@@ -1,0 +1,101 @@
+MICROSERVICIO APP-PAGOS
+=======================
+
+Ruta
+----
+microservicios/app-pagos/
+
+Descripcion
+-----------
+app-pagos es un microservicio externo de pagos integrado al proyecto.
+Su funcion es mantener separada la logica de pagos respecto del backend
+principal del ecommerce.
+
+Esta version es stateless:
+  no usa base de datos propia,
+  mantiene operaciones temporales en memoria,
+  se comunica directamente con MercadoPago.
+
+Tecnologia
+----------
+Python
+FastAPI
+MercadoPago SDK
+Requests
+
+Puerto
+------
+8002
+
+Documentacion interactiva
+-------------------------
+http://localhost:8002/docs
+
+Endpoints principales
+---------------------
+GET /health
+  Verifica estado del servicio y credenciales de MercadoPago.
+
+POST /pagos/crear
+  Crea una operacion de pago para checkout externo.
+  Devuelve id_pago, url_pago y external_reference.
+
+GET /pagos/{id_pago}/estado
+  Consulta estado de una operacion de pago.
+
+POST /pagos/{id_pago}/cancelar
+  Cancela un pago pendiente.
+
+POST /pagos/directo/procesar
+  Procesa un pago directo con tarjeta.
+  El backend principal actualmente usa el flujo de checkout externo con
+  POST /pagos/crear.
+
+POST /pagos/webhook
+  Recibe notificaciones de MercadoPago.
+
+Responsabilidades
+-----------------
+Crear preferencias de pago.
+Procesar pagos directos cuando se use ese flujo.
+Consultar estado de pagos.
+Cancelar pagos pendientes.
+Exponer una API separada para el backend.
+Mantener operaciones temporales en memoria.
+
+Variables importantes
+---------------------
+MP_ACCESS_TOKEN:
+  Access token de MercadoPago.
+
+MP_PUBLIC_KEY:
+  Public key de MercadoPago.
+
+MP_WEBHOOK_URL:
+  URL para recibir notificaciones.
+
+MP_SUCCESS_URL:
+  URL de retorno para pago exitoso.
+
+MP_FAILURE_URL:
+  URL de retorno para pago fallido.
+
+MP_PENDING_URL:
+  URL de retorno para pago pendiente.
+
+Comunicacion interna
+--------------------
+El backend principal llama a app-pagos usando:
+
+  http://app-pagos:8002
+
+Eso funciona dentro de Docker porque ambos servicios estan en la misma red:
+
+  microservices-network
+
+Importante
+----------
+Si MP_ACCESS_TOKEN esta vacio, crear pagos falla.
+
+Si MP_PUBLIC_KEY esta vacio, el health check queda degradado y el flujo de pago
+directo con tarjeta no puede operar.
