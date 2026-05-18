@@ -10,7 +10,7 @@ from app.database import obtener_db
 from app.models import Usuario
 
 
-esquema_oauth2 = OAuth2PasswordBearer(tokenUrl="/auth/login")
+esquema_oauth2 = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 
 def obtener_usuario_actual(token: str = Depends(esquema_oauth2), db: Session = Depends(obtener_db)) -> Usuario:

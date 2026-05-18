@@ -34,7 +34,8 @@ class Configuracion(BaseSettings):
     cors_origins: str = (
         "http://localhost:4200,"
         "http://127.0.0.1:4200,"
-        "http://localhost:5173"
+        "http://localhost:5173,"
+        "http://ev2-alb-873341758.us-east-1.elb.amazonaws.com"
     )
 
     auto_create_tables: bool = True

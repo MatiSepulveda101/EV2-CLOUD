@@ -27,7 +27,16 @@ async def ciclo_vida(app: FastAPI):
     yield
 
 
-app = FastAPI(title=configuracion.app_name, version="0.1.0", lifespan=ciclo_vida)
+API_PREFIX = "/api"
+
+app = FastAPI(
+    title=configuracion.app_name,
+    version="0.1.0",
+    lifespan=ciclo_vida,
+    docs_url=f"{API_PREFIX}/docs",
+    redoc_url=f"{API_PREFIX}/redoc",
+    openapi_url=f"{API_PREFIX}/openapi.json",
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -37,13 +46,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(auth.router)
-app.include_router(products.router)
-app.include_router(cart.router)
-app.include_router(checkout.router)
-app.include_router(orders.router)
+app.include_router(auth.router, prefix=API_PREFIX)
+app.include_router(products.router, prefix=API_PREFIX)
+app.include_router(cart.router, prefix=API_PREFIX)
+app.include_router(checkout.router, prefix=API_PREFIX)
+app.include_router(orders.router, prefix=API_PREFIX)
 
 
-@app.get("/health", tags=["health"])
+@app.get(f"{API_PREFIX}/health", tags=["health"])
 def verificar_salud() -> dict[str, str]:
     return {"status": "ok", "service": "backend"}
