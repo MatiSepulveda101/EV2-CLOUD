@@ -68,7 +68,7 @@ app/services/:
 Puerto
 ------
 Local:
-  http://localhost:8000
+http://34.207.155.50:8000
 
 Documentacion interactiva:
   http://localhost:8000/docs

@@ -109,25 +109,50 @@ def crear_pago_checkout(payload: PagoCreateCheckoutRequest):
     if not MP_ACCESS_TOKEN:
         raise HTTPException(status_code=500, detail="MP_ACCESS_TOKEN no configurado")
 
-    logger.info("[pagos] Creación de pago iniciada id_usuario=%s monto=%s", payload.id_usuario, payload.monto)
+    logger.info(
+        "[pagos] Creación de pago iniciada id_usuario=%s monto=%s",
+        payload.id_usuario,
+        payload.monto
+    )
 
     external_reference = _generate_external_reference(payload.id_usuario)
+
     sdk = mercadopago.SDK(MP_ACCESS_TOKEN)
+
     preference_data = {
-        "items": [{"title": payload.descripcion, "quantity": 1, "currency_id": "CLP", "unit_price": float(payload.monto)}],
-        "payer": {"email": payload.email_pagador},
+        "items": [{
+            "title": payload.descripcion,
+            "quantity": 1,
+            "currency_id": "CLP",
+            "unit_price": float(payload.monto)
+        }],
+        "payer": {
+            "email": payload.email_pagador
+        },
         "external_reference": external_reference,
-        "back_urls": {"success": MP_SUCCESS_URL, "failure": MP_FAILURE_URL, "pending": MP_PENDING_URL},
-        "auto_return": "approved",
-        "notification_url": MP_WEBHOOK_URL,
+        "back_urls": {
+            "success": MP_SUCCESS_URL,
+            "failure": MP_FAILURE_URL,
+            "pending": MP_PENDING_URL
+        },
     }
 
+    if MP_WEBHOOK_URL:
+        preference_data["notification_url"] = MP_WEBHOOK_URL
+
     preference_response = sdk.preference().create(preference_data)
+
+    logger.info("[pagos] respuesta MP: %s", preference_response)
+
     body = preference_response.get("response", {})
     init_point = body.get("init_point")
     preference_id = body.get("id")
+
     if preference_response.get("status") not in (200, 201) or not init_point:
-        raise HTTPException(status_code=502, detail="No fue posible crear preferencia en Mercado Pago")
+        raise HTTPException(
+            status_code=502,
+            detail=f"No fue posible crear preferencia en Mercado Pago: {body}"
+        )
 
     operacion_id = _registrar_operacion(
         payload=PagoDirectoRequest(
@@ -149,9 +174,13 @@ def crear_pago_checkout(payload: PagoCreateCheckoutRequest):
     return PagoCreateCheckoutResponse(
         success=True,
         message="Pago creado correctamente",
-        data={"id_pago": operacion_id, "url_pago": init_point, "external_reference": external_reference, "preference_id": preference_id},
+        data={
+            "id_pago": operacion_id,
+            "url_pago": init_point,
+            "external_reference": external_reference,
+            "preference_id": preference_id
+        },
     )
-
 
 @router.get("/{id_pago}/estado", response_model=PagoEstadoResponse)
 def consultar_estado_pago(id_pago: int):

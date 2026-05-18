@@ -1,0 +1,58 @@
+name: Deploy ECS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      # FRONTEND
+      - name: Build frontend image
+        run: |
+          docker build -t ${{ secrets.ECR_FRONTEND }}:latest ./frontend
+
+      - name: Push frontend image
+        run: |
+          docker push ${{ secrets.ECR_FRONTEND }}:latest
+
+      # BACKEND
+      - name: Build backend image
+        run: |
+          docker build -t ${{ secrets.ECR_BACKEND }}:latest ./backend
+
+      - name: Push backend image
+        run: |
+          docker push ${{ secrets.ECR_BACKEND }}:latest
+
+      # DEPLOY FRONTEND
+      - name: Deploy frontend service
+        run: |
+          aws ecs update-service \
+            --cluster ${{ secrets.ECS_CLUSTER }} \
+            --service ${{ secrets.ECS_FRONTEND_SERVICE }} \
+            --force-new-deployment
+
+      # DEPLOY BACKEND
+      - name: Deploy backend service
+        run: |
+          aws ecs update-service \
+            --cluster ${{ secrets.ECS_CLUSTER }} \
+            --service ${{ secrets.ECS_BACKEND_SERVICE }} \
+            --force-new-deployment

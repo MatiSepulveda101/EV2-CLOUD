@@ -14,7 +14,7 @@ class PagoCreateCheckoutRequest(BaseModel):
     @classmethod
     def validate_descripcion(cls, v):
         value = v.strip()
-        if len(value) < 3:
+        if len(value) <  3:
             raise ValueError("La descripción debe tener al menos 3 caracteres")
         return value
 
