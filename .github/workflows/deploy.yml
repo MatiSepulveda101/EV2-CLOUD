@@ -8,6 +8,9 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      APP_PAGOS_IMAGE: 828435023385.dkr.ecr.us-east-1.amazonaws.com/ev2-app-pagos
+      APP_PAGOS_SERVICE: app-pagos-service
 
     steps:
       - name: Checkout repository
@@ -42,13 +45,18 @@ jobs:
           docker push ${{ secrets.ECR_BACKEND }}:latest
 
       # APP PAGOS
+      - name: Ensure app-pagos ECR repository exists
+        run: |
+          aws ecr describe-repositories --repository-names ev2-app-pagos || \
+          aws ecr create-repository --repository-name ev2-app-pagos
+
       - name: Build app-pagos image
         run: |
-          docker build -t ${{ secrets.ECR_APP_PAGOS }}:latest ./microservicios/app-pagos
+          docker build -t $APP_PAGOS_IMAGE:latest ./microservicios/app-pagos
 
       - name: Push app-pagos image
         run: |
-          docker push ${{ secrets.ECR_APP_PAGOS }}:latest
+          docker push $APP_PAGOS_IMAGE:latest
 
       # DEPLOY FRONTEND
       - name: Deploy frontend service
@@ -71,5 +79,5 @@ jobs:
         run: |
           aws ecs update-service \
             --cluster ${{ secrets.ECS_CLUSTER }} \
-            --service ${{ secrets.ECS_APP_PAGOS_SERVICE }} \
+            --service $APP_PAGOS_SERVICE \
             --force-new-deployment
