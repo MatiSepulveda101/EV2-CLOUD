@@ -2,6 +2,8 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { Observable, catchError, throwError } from 'rxjs';
 
+const AUTH_STORAGE_KEY = 'session_access_token';
+
 export class ApiHttpError extends Error {
   constructor(
     public readonly status: number,
@@ -24,13 +26,17 @@ export class ApiClientService {
 
   get<T>(path: string): Observable<T> {
     return this.http
-      .get<T>(this.buildUrl(path))
+      .get<T>(this.buildUrl(path), {
+        headers: this.getAuthHeaders()
+      })
       .pipe(catchError((error) => this.handleError(error)));
   }
 
   post<T>(path: string, body?: unknown): Observable<T> {
     return this.http
-      .post<T>(this.buildUrl(path), body)
+      .post<T>(this.buildUrl(path), body, {
+        headers: this.getAuthHeaders()
+      })
       .pipe(catchError((error) => this.handleError(error)));
   }
 
@@ -39,27 +45,36 @@ export class ApiClientService {
 
     return this.http
       .post<T>(this.buildUrl(path), formBody, {
-        headers: new HttpHeaders({
+        headers: this.getAuthHeaders(new HttpHeaders({
           'Content-Type': 'application/x-www-form-urlencoded'
-        })
+        }))
       })
       .pipe(catchError((error) => this.handleError(error)));
   }
 
   patch<T>(path: string, body: unknown): Observable<T> {
     return this.http
-      .patch<T>(this.buildUrl(path), body)
+      .patch<T>(this.buildUrl(path), body, {
+        headers: this.getAuthHeaders()
+      })
       .pipe(catchError((error) => this.handleError(error)));
   }
 
   delete<T>(path: string): Observable<T> {
     return this.http
-      .delete<T>(this.buildUrl(path))
+      .delete<T>(this.buildUrl(path), {
+        headers: this.getAuthHeaders()
+      })
       .pipe(catchError((error) => this.handleError(error)));
   }
 
   private buildUrl(path: string): string {
     return `${this.baseUrl}${path.startsWith('/') ? path : `/${path}`}`;
+  }
+
+  private getAuthHeaders(headers = new HttpHeaders()): HttpHeaders {
+    const token = localStorage.getItem(AUTH_STORAGE_KEY);
+    return token ? headers.set('Authorization', `Bearer ${token}`) : headers;
   }
 
   private handleError(error: unknown): Observable<never> {
