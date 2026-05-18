@@ -18,8 +18,7 @@ export class ApiHttpError extends Error {
 })
 export class ApiClientService {
 
-  // 🔥 BACKEND AWS ECS
-  readonly baseUrl = 'http://34.207.155.50:8000';
+readonly baseUrl = 'http://ev2-alb-873341758.us-east-1.elb.amazonaws.com';
 
   constructor(private readonly http: HttpClient) {}
 
