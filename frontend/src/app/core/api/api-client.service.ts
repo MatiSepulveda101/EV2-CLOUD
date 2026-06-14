@@ -52,6 +52,14 @@ export class ApiClientService {
       .pipe(catchError((error) => this.handleError(error)));
   }
 
+  postMultipart<T>(path: string, formData: FormData): Observable<T> {
+    return this.http
+      .post<T>(this.buildUrl(path), formData, {
+        headers: this.getAuthHeaders()
+      })
+      .pipe(catchError((error) => this.handleError(error)));
+  }
+
   patch<T>(path: string, body: unknown): Observable<T> {
     return this.http
       .patch<T>(this.buildUrl(path), body, {
@@ -78,7 +86,6 @@ export class ApiClientService {
   }
 
   private handleError(error: unknown): Observable<never> {
-
     if (!(error instanceof HttpErrorResponse)) {
       return throwError(
         () => new ApiHttpError(0, 'Error inesperado de conexion.')
@@ -95,9 +102,7 @@ export class ApiClientService {
   }
 
   private getMessageByStatus(status: number): string {
-
     switch (status) {
-
       case 400:
         return 'Solicitud invalida.';
 
@@ -109,6 +114,9 @@ export class ApiClientService {
 
       case 409:
         return 'Conflicto de datos en la operacion.';
+
+      case 413:
+        return 'El archivo supera el limite permitido o no hay espacio suficiente.';
 
       case 422:
         return 'Datos de entrada no validos.';
@@ -122,7 +130,6 @@ export class ApiClientService {
   }
 
   private extractDetail(errorBody: unknown): string {
-
     if (!errorBody) {
       return '';
     }
@@ -132,7 +139,6 @@ export class ApiClientService {
     }
 
     if (typeof errorBody === 'object') {
-
       const body = errorBody as Record<string, unknown>;
       const detail = body['detail'];
 
@@ -141,16 +147,13 @@ export class ApiClientService {
       }
 
       if (Array.isArray(detail)) {
-
         return detail
           .map((entry) => {
-
             if (typeof entry === 'string') {
               return entry;
             }
 
             if (entry && typeof entry === 'object') {
-
               const value = (entry as Record<string, unknown>)['msg'];
 
               if (typeof value === 'string') {

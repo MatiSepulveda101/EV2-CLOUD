@@ -104,3 +104,21 @@ export interface OrdenLeer {
   created_at?: string;
   updated_at?: string;
 }
+
+export interface ArchivoUsuarioLeer {
+  id: number;
+  filename: string;
+  s3_key: string;
+  content_type: string;
+  size_bytes: number;
+  uploaded_at: string;
+}
+
+export interface AlmacenamientoUsuarioLeer {
+  limite_bytes: number;
+  usado_bytes: number;
+  disponible_bytes: number;
+  usado_mb: number;
+  disponible_mb: number;
+  porcentaje_usado: number;
+}

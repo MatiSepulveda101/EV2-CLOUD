@@ -2,6 +2,8 @@ import { Injectable } from '@angular/core';
 import { Observable, catchError, map, switchMap, takeWhile, throwError, timer } from 'rxjs';
 import { ApiClientService } from '../api/api-client.service';
 import {
+  AlmacenamientoUsuarioLeer,
+  ArchivoUsuarioLeer,
   CarritoLeer,
   ItemCarritoActualizar,
   ItemCarritoCrear,
@@ -73,6 +75,27 @@ export class EcommerceService {
       takeWhile((order) => !this.isFinalStatus(order.status), true),
       catchError((error) => throwError(() => error))
     );
+  }
+
+  uploadFile(file: File): Observable<ArchivoUsuarioLeer> {
+    const formData = new FormData();
+    formData.append('archivo', file);
+
+    return this.apiClient
+      .postMultipart<unknown>('/files/upload', formData)
+      .pipe(map((response) => this.normalizeFile(response)));
+  }
+
+  getFiles(): Observable<ArchivoUsuarioLeer[]> {
+    return this.apiClient
+      .get<unknown>('/files')
+      .pipe(map((response) => this.normalizeFiles(response)));
+  }
+
+  getStorage(): Observable<AlmacenamientoUsuarioLeer> {
+    return this.apiClient
+      .get<unknown>('/files/storage')
+      .pipe(map((response) => this.normalizeStorage(response)));
   }
 
   private isFinalStatus(status: string): boolean {
@@ -194,6 +217,7 @@ export class EcommerceService {
 
     const payment = payload as Record<string, unknown>;
     const appPagosId = String(payment['app_pagos_id'] ?? payment['id_pago'] ?? '').trim();
+
     if (!appPagosId) {
       return null;
     }
@@ -205,6 +229,38 @@ export class EcommerceService {
       status: String(payment['status'] ?? 'pending'),
       payment_url: this.asOptionalString(payment['payment_url']) ?? null,
       created_at: this.asOptionalString(payment['created_at'])
+    };
+  }
+
+  private normalizeFiles(payload: unknown): ArchivoUsuarioLeer[] {
+    const files = Array.isArray(payload) ? payload : [];
+
+    return files.map((file) => this.normalizeFile(file));
+  }
+
+  private normalizeFile(payload: unknown): ArchivoUsuarioLeer {
+    const file = payload as Record<string, unknown>;
+
+    return {
+      id: Number(file['id'] ?? 0),
+      filename: String(file['filename'] ?? ''),
+      s3_key: String(file['s3_key'] ?? ''),
+      content_type: String(file['content_type'] ?? 'application/octet-stream'),
+      size_bytes: Number(file['size_bytes'] ?? 0),
+      uploaded_at: String(file['uploaded_at'] ?? '')
+    };
+  }
+
+  private normalizeStorage(payload: unknown): AlmacenamientoUsuarioLeer {
+    const storage = payload as Record<string, unknown>;
+
+    return {
+      limite_bytes: Number(storage['limite_bytes'] ?? 0),
+      usado_bytes: Number(storage['usado_bytes'] ?? 0),
+      disponible_bytes: Number(storage['disponible_bytes'] ?? 0),
+      usado_mb: Number(storage['usado_mb'] ?? 0),
+      disponible_mb: Number(storage['disponible_mb'] ?? 0),
+      porcentaje_usado: Number(storage['porcentaje_usado'] ?? 0)
     };
   }
 

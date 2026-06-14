@@ -25,11 +25,17 @@ export class StorePageComponent implements OnInit {
   readonly modalSesionAbierto = signal(false);
   readonly carritoAbierto = signal(false);
   readonly motivoSesion = signal('Ingresa para continuar con tu compra.');
+  readonly archivoSeleccionado = signal<File | null>(null);
 
   readonly itemsCarrito = computed(() => this.tienda.cart()?.items ?? []);
   readonly subtotalCarrito = computed(() => this.tienda.cart()?.subtotal ?? 0);
   readonly cantidadCarrito = computed(() => this.tienda.cart()?.total_items ?? 0);
   readonly totalResultados = computed(() => this.productosFiltrados().length);
+
+  readonly porcentajeAlmacenamiento = computed(() => this.tienda.almacenamiento()?.porcentaje_usado ?? 0);
+  readonly espacioUsadoTexto = computed(() => this.formatearBytes(this.tienda.almacenamiento()?.usado_bytes ?? 0));
+  readonly espacioDisponibleTexto = computed(() => this.formatearBytes(this.tienda.almacenamiento()?.disponible_bytes ?? 0));
+  readonly limiteAlmacenamientoTexto = computed(() => this.formatearBytes(this.tienda.almacenamiento()?.limite_bytes ?? 0));
 
   readonly categorias = computed(() => {
     const categorias = new Set<string>(['Todos']);
@@ -57,8 +63,14 @@ export class StorePageComponent implements OnInit {
   });
 
   readonly formularioLogin = new FormGroup({
-    email: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.email] }),
-    password: new FormControl('', { nonNullable: true, validators: [Validators.required] })
+    email: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required, Validators.email]
+    }),
+    password: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required]
+    })
   });
 
   readonly formularioRegistro = new FormGroup({
@@ -66,7 +78,10 @@ export class StorePageComponent implements OnInit {
       nonNullable: true,
       validators: [Validators.required, Validators.minLength(2)]
     }),
-    email: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.email] }),
+    email: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required, Validators.email]
+    }),
     password: new FormControl('', {
       nonNullable: true,
       validators: [Validators.required, Validators.minLength(8)]
@@ -74,7 +89,10 @@ export class StorePageComponent implements OnInit {
   });
 
   readonly formularioVerificacion = new FormGroup({
-    email: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.email] }),
+    email: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required, Validators.email]
+    }),
     codigo: new FormControl('', {
       nonNullable: true,
       validators: [Validators.required, Validators.minLength(4), Validators.maxLength(10)]
@@ -86,17 +104,21 @@ export class StorePageComponent implements OnInit {
 
     if (this.tienda.sessionState.isAuthenticated()) {
       this.tienda.loadCart();
+      this.tienda.loadFiles();
+      this.tienda.loadStorage();
     }
 
-    this.ruta.queryParamMap.pipe(takeUntilDestroyed(this.destruir)).subscribe((parametros) => {
-      const idOrden = parametros.get('order_id');
+    this.ruta.queryParamMap
+      .pipe(takeUntilDestroyed(this.destruir))
+      .subscribe((parametros) => {
+        const idOrden = parametros.get('order_id');
 
-      if (!idOrden) {
-        return;
-      }
+        if (!idOrden) {
+          return;
+        }
 
-      this.tienda.startOrderSync(idOrden);
-    });
+        this.tienda.startOrderSync(idOrden);
+      });
   }
 
   async iniciarSesion(): Promise<void> {
@@ -189,11 +211,15 @@ export class StorePageComponent implements OnInit {
 
   cerrarSesionActual(): void {
     this.tienda.logout();
+    this.archivoSeleccionado.set(null);
     this.carritoAbierto.set(false);
     this.cerrarModalSesion();
   }
 
-  abrirSesion(modo: ModoAutenticacion = 'login', motivo = 'Ingresa para continuar con tu compra.'): void {
+  abrirSesion(
+    modo: ModoAutenticacion = 'login',
+    motivo = 'Ingresa para continuar con tu compra.'
+  ): void {
     this.modoAutenticacion.set(modo);
     this.motivoSesion.set(motivo);
     this.modalSesionAbierto.set(true);
@@ -271,11 +297,56 @@ export class StorePageComponent implements OnInit {
       return;
     }
 
-    document.getElementById('estado-orden')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    document.getElementById('estado-orden')?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start'
+    });
   }
 
   reintentarEstadoOrden(): void {
     this.tienda.retryOrderSync();
+  }
+
+  seleccionarArchivo(evento: Event): void {
+    const input = evento.target as HTMLInputElement;
+    const archivo = input.files?.[0] ?? null;
+
+    this.archivoSeleccionado.set(archivo);
+    this.tienda.fileError.set('');
+  }
+
+  limpiarArchivoSeleccionado(): void {
+    this.archivoSeleccionado.set(null);
+  }
+
+  async subirArchivoSeleccionado(): Promise<void> {
+    if (!this.tienda.sessionState.isAuthenticated()) {
+      this.abrirSesion('login', 'Inicia sesion para subir archivos.');
+      return;
+    }
+
+    const archivo = this.archivoSeleccionado();
+
+    if (!archivo) {
+      this.tienda.fileError.set('Selecciona un archivo antes de subirlo.');
+      return;
+    }
+
+    await this.tienda.uploadFile(archivo);
+
+    if (!this.tienda.fileError()) {
+      this.archivoSeleccionado.set(null);
+    }
+  }
+
+  async actualizarArchivos(): Promise<void> {
+    if (!this.tienda.sessionState.isAuthenticated()) {
+      this.abrirSesion('login', 'Inicia sesion para revisar tus archivos.');
+      return;
+    }
+
+    await this.tienda.loadFiles();
+    await this.tienda.loadStorage();
   }
 
   obtenerCategoriaProducto(producto: Producto): string {
@@ -310,5 +381,30 @@ export class StorePageComponent implements OnInit {
 
   obtenerTotalItem(item: ItemCarritoLeer): number {
     return item.subtotal ?? this.obtenerPrecioItem(item) * item.quantity;
+  }
+
+  formatearBytes(bytes: number): string {
+    if (!bytes || bytes <= 0) {
+      return '0 MB';
+    }
+
+    const mb = bytes / 1024 / 1024;
+
+    if (mb < 1024) {
+      return `${mb.toFixed(2)} MB`;
+    }
+
+    return `${(mb / 1024).toFixed(2)} GB`;
+  }
+
+  formatearFecha(fecha: string | undefined): string {
+    if (!fecha) {
+      return 'Sin fecha';
+    }
+
+    return new Date(fecha).toLocaleString('es-CL', {
+      dateStyle: 'short',
+      timeStyle: 'short'
+    });
   }
 }
