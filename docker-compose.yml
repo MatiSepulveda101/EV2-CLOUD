@@ -1,9 +1,9 @@
-name: ev2-cloud-ecommerce
+name: ev3-cloud-ecommerce
 
 services:
   postgres-db:
     image: postgres:15-alpine
-    container_name: ev2-postgres-db
+    container_name: ev3-postgres-db
     environment:
       POSTGRES_DB: ecommerce
       POSTGRES_USER: postgres
@@ -14,33 +14,62 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - microservices-network
+    restart: unless-stopped
+
+  app-notificaciones:
+    build:
+      context: ./microservicios/app-notificaciones
+      dockerfile: Dockerfile
+    container_name: ev3-app-notificaciones
+    environment:
+      APP_NAME: app-notificaciones
+      APP_ENV: development
+      APP_PORT: 8003
+
+      SMTP_HOST: ""
+      SMTP_PORT: 587
+      SMTP_USER: ""
+      SMTP_PASSWORD: ""
+      SMTP_FROM: ""
+
+      TWILIO_ACCOUNT_SID: ""
+      TWILIO_AUTH_TOKEN: ""
+      TWILIO_FROM: ""
+      TWILIO_TO_TEST: ""
+    ports:
+      - "8003:8003"
+    networks:
+      - microservices-network
+    restart: unless-stopped
 
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: ev2-backend
+    container_name: ev3-backend
     environment:
       DATABASE_URL: postgresql+psycopg://postgres:postgres@postgres-db:5432/ecommerce
       JWT_SECRET_KEY: dev-secret-key-with-enough-length
 
-      # FIX IMPORTANTE
-      CORS_ORIGINS: http://localhost:4200
+      CORS_ORIGINS: http://localhost,http://localhost:4200,http://127.0.0.1,http://127.0.0.1:4200
 
       AUTO_CREATE_TABLES: "true"
       AUTO_SEED_PRODUCTS: "true"
+
+      NOTIFICATIONS_SERVICE_URL: http://app-notificaciones:8003
     ports:
       - "8000:8000"
     networks:
       - microservices-network
     depends_on:
       - postgres-db
+      - app-notificaciones
     restart: unless-stopped
 
   app-pagos:
     build:
       context: ./microservicios/app-pagos
-    container_name: ev2-app-pagos
+    container_name: ev3-app-pagos
     environment:
       MP_ACCESS_TOKEN: ${MP_ACCESS_TOKEN:-}
       MP_PUBLIC_KEY: ${MP_PUBLIC_KEY:-}
@@ -57,9 +86,9 @@ services:
   frontend:
     build:
       context: ./frontend
-    container_name: ev2-frontend
+    container_name: ev3-frontend
     ports:
-      - "80:80"
+      - "4200:80"
     networks:
       - microservices-network
     depends_on:
