@@ -20,7 +20,7 @@ export class ApiHttpError extends Error {
 })
 export class ApiClientService {
 
-  readonly baseUrl = 'http://ev2-alb-873341758.us-east-1.elb.amazonaws.com/api';
+  readonly baseUrl = 'http://localhost:8000/api';
 
   constructor(private readonly http: HttpClient) {}
 

@@ -30,6 +30,7 @@ class Configuracion(BaseSettings):
 
     app_pagos_url: str = "http://app-pagos:8002"
     payment_timeout_seconds: float = 10.0
+    notifications_service_url: str = "http://app-notificaciones:8003"
 
     cors_origins: str = (
         "http://localhost:4200,"

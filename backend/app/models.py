@@ -33,6 +33,12 @@ class Usuario(Base):
     full_name: Mapped[str] = mapped_column(String(255), nullable=False)
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+
+    is_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    verification_code_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    verification_code_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     carrito: Mapped["Carrito"] = relationship(back_populates="usuario", cascade="all, delete-orphan", uselist=False)

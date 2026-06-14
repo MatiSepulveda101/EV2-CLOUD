@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.routers import notificaciones
+
 app = FastAPI(
     title="Microservicio de Notificaciones",
     description="Servicio encargado de correos, validaciones, compras, pagos y SMS/WhatsApp",
@@ -14,6 +16,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+app.include_router(notificaciones.router)
 
 
 @app.get("/health")

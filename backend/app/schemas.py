@@ -18,6 +18,14 @@ class UsuarioLogin(BaseModel):
     email: EmailStr
     password: str
 
+class UsuarioVerificarCodigo(BaseModel):
+    email: EmailStr
+    codigo: str = Field(..., min_length=4, max_length=10)
+
+
+class UsuarioReenviarCodigo(BaseModel):
+    email: EmailStr
+
 
 class UsuarioLeer(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -26,6 +34,7 @@ class UsuarioLeer(BaseModel):
     email: EmailStr
     full_name: str
     is_active: bool
+    is_verified: bool
     created_at: datetime
 
 

@@ -6,7 +6,7 @@ import { ActivatedRoute } from '@angular/router';
 import { ItemCarritoLeer, Producto } from '../../core/models/ecommerce.models';
 import { ShopStateService } from '../../core/state/shop.state';
 
-type ModoAutenticacion = 'login' | 'register';
+type ModoAutenticacion = 'login' | 'register' | 'verify';
 
 @Component({
   selector: 'app-store-page',
@@ -73,6 +73,14 @@ export class StorePageComponent implements OnInit {
     })
   });
 
+  readonly formularioVerificacion = new FormGroup({
+    email: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.email] }),
+    codigo: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required, Validators.minLength(4), Validators.maxLength(10)]
+    })
+  });
+
   ngOnInit(): void {
     this.tienda.loadProducts();
 
@@ -82,6 +90,7 @@ export class StorePageComponent implements OnInit {
 
     this.ruta.queryParamMap.pipe(takeUntilDestroyed(this.destruir)).subscribe((parametros) => {
       const idOrden = parametros.get('order_id');
+
       if (!idOrden) {
         return;
       }
@@ -112,20 +121,70 @@ export class StorePageComponent implements OnInit {
       return;
     }
 
+    const emailRegistrado = this.formularioRegistro.controls.email.value.trim().toLowerCase();
+
     await this.tienda.register({
       full_name: this.formularioRegistro.controls.full_name.value.trim(),
-      email: this.formularioRegistro.controls.email.value.trim().toLowerCase(),
+      email: emailRegistrado,
       password: this.formularioRegistro.controls.password.value
     });
 
     if (!this.tienda.authError()) {
-      this.modoAutenticacion.set('login');
+      this.formularioVerificacion.reset({
+        email: emailRegistrado,
+        codigo: ''
+      });
+
+      this.modoAutenticacion.set('verify');
+
       this.formularioRegistro.reset({
         full_name: '',
         email: '',
         password: ''
       });
     }
+  }
+
+  async verificarCuenta(): Promise<void> {
+    if (this.formularioVerificacion.invalid) {
+      this.formularioVerificacion.markAllAsTouched();
+      return;
+    }
+
+    const email = this.formularioVerificacion.controls.email.value.trim().toLowerCase();
+    const codigo = this.formularioVerificacion.controls.codigo.value.trim();
+
+    await this.tienda.verifyAccount({
+      email,
+      codigo
+    });
+
+    if (!this.tienda.authError()) {
+      this.modoAutenticacion.set('login');
+
+      this.formularioLogin.reset({
+        email,
+        password: ''
+      });
+
+      this.formularioVerificacion.reset({
+        email: '',
+        codigo: ''
+      });
+    }
+  }
+
+  async reenviarCodigo(): Promise<void> {
+    const email = this.formularioVerificacion.controls.email.value.trim().toLowerCase();
+
+    if (!email) {
+      this.tienda.authError.set('Ingresa el correo para reenviar el codigo.');
+      return;
+    }
+
+    await this.tienda.resendCode({
+      email
+    });
   }
 
   cerrarSesionActual(): void {

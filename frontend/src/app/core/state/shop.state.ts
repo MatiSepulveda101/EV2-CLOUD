@@ -3,7 +3,14 @@ import { firstValueFrom, Subscription } from 'rxjs';
 import { ApiHttpError } from '../api/api-client.service';
 import { AuthService } from '../services/auth.service';
 import { EcommerceService } from '../services/ecommerce.service';
-import { CarritoLeer, OrdenLeer, Producto, UsuarioCrear } from '../models/ecommerce.models';
+import {
+  CarritoLeer,
+  OrdenLeer,
+  Producto,
+  UsuarioCrear,
+  UsuarioReenviarCodigo,
+  UsuarioVerificarCodigo
+} from '../models/ecommerce.models';
 import { SessionStateService } from './session.state';
 
 @Injectable({
@@ -49,7 +56,38 @@ export class ShopStateService implements OnDestroy {
 
     try {
       await firstValueFrom(this.authService.register(payload));
-      this.successMessage.set('Registro exitoso. Ahora inicia sesion.');
+      this.successMessage.set('Registro exitoso. Ingresa el codigo enviado para activar tu cuenta.');
+
+    } catch (error) {
+      this.authError.set(this.getErrorMessage(error));
+    } finally {
+      this.authSubmitting.set(false);
+    }
+  }
+
+  async verifyAccount(payload: UsuarioVerificarCodigo): Promise<void> {
+    this.authSubmitting.set(true);
+    this.authError.set('');
+    this.successMessage.set('');
+
+    try {
+      await firstValueFrom(this.authService.verifyAccount(payload));
+      this.successMessage.set('Cuenta validada correctamente. Ahora puedes iniciar sesion.');
+    } catch (error) {
+      this.authError.set(this.getErrorMessage(error));
+    } finally {
+      this.authSubmitting.set(false);
+    }
+  }
+
+  async resendCode(payload: UsuarioReenviarCodigo): Promise<void> {
+    this.authSubmitting.set(true);
+    this.authError.set('');
+    this.successMessage.set('');
+
+    try {
+      await firstValueFrom(this.authService.resendCode(payload));
+      this.successMessage.set('Codigo reenviado correctamente.');
     } catch (error) {
       this.authError.set(this.getErrorMessage(error));
     } finally {

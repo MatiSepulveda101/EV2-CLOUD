@@ -304,80 +304,124 @@
   }
 
   @if (modalSesionAbierto()) {
-    <div class="modal-backdrop" (click)="cerrarModalSesion()">
-      <section class="auth-modal" role="dialog" aria-modal="true" aria-label="Inicio de sesion" (click)="$event.stopPropagation()">
-        <div class="modal-head">
-          <div>
-            <p>Cuenta cliente</p>
-            <h2>{{ modoAutenticacion() === 'login' ? 'Iniciar sesion' : 'Crear cuenta' }}</h2>
-          </div>
-          <button type="button" class="icon-button" (click)="cerrarModalSesion()" aria-label="Cerrar inicio de sesion">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="m18.3 5.7-1.4-1.4L12 9.2 7.1 4.3 5.7 5.7l4.9 4.9-4.9 4.9 1.4 1.4 4.9-4.9 4.9 4.9 1.4-1.4-4.9-4.9z" />
-            </svg>
-          </button>
+  <div class="modal-backdrop" (click)="cerrarModalSesion()">
+    <section class="auth-modal" role="dialog" aria-modal="true" aria-label="Inicio de sesion" (click)="$event.stopPropagation()">
+      <div class="modal-head">
+        <div>
+          <p>Cuenta cliente</p>
+          <h2>
+            @if (modoAutenticacion() === 'login') {
+              Iniciar sesion
+            } @else if (modoAutenticacion() === 'register') {
+              Crear cuenta
+            } @else {
+              Validar cuenta
+            }
+          </h2>
         </div>
 
-        <p class="modal-reason">{{ motivoSesion() }}</p>
+        <button type="button" class="icon-button" (click)="cerrarModalSesion()" aria-label="Cerrar inicio de sesion">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="m18.3 5.7-1.4-1.4L12 9.2 7.1 4.3 5.7 5.7l4.9 4.9-4.9 4.9 1.4 1.4 4.9-4.9 4.9 4.9 1.4-1.4-4.9-4.9z" />
+          </svg>
+        </button>
+      </div>
 
-        @if (tienda.authError()) {
-          <p class="message inline error">{{ tienda.authError() }}</p>
-        }
-        @if (tienda.successMessage()) {
-          <p class="message inline success">{{ tienda.successMessage() }}</p>
-        }
+      <p class="modal-reason">{{ motivoSesion() }}</p>
 
-        <div class="auth-tabs" role="tablist" aria-label="Alternar login y registro">
-          <button type="button" [class.active]="modoAutenticacion() === 'login'" (click)="cambiarModoAutenticacion('login')">
-            Iniciar sesion
+      @if (tienda.authError()) {
+        <p class="message inline error">{{ tienda.authError() }}</p>
+      }
+
+      @if (tienda.successMessage()) {
+        <p class="message inline success">{{ tienda.successMessage() }}</p>
+      }
+
+      <div class="auth-tabs" role="tablist" aria-label="Alternar login registro y validacion">
+        <button type="button" [class.active]="modoAutenticacion() === 'login'" (click)="cambiarModoAutenticacion('login')">
+          Iniciar sesion
+        </button>
+
+        <button type="button" [class.active]="modoAutenticacion() === 'register'" (click)="cambiarModoAutenticacion('register')">
+          Crear cuenta
+        </button>
+
+        <button type="button" [class.active]="modoAutenticacion() === 'verify'" (click)="cambiarModoAutenticacion('verify')">
+          Validar cuenta
+        </button>
+      </div>
+
+      @if (modoAutenticacion() === 'login') {
+        <form [formGroup]="formularioLogin" (ngSubmit)="iniciarSesion()" class="auth-form">
+          <label>
+            Correo
+            <input type="email" formControlName="email" placeholder="correo@dominio.cl" />
+          </label>
+
+          <label>
+            Contrasena
+            <input type="password" formControlName="password" placeholder="Ingresa tu clave" />
+          </label>
+
+          <button type="submit" class="primary-button" [disabled]="tienda.authSubmitting()">
+            @if (tienda.authSubmitting()) {
+              Validando
+            } @else {
+              Entrar
+            }
           </button>
-          <button type="button" [class.active]="modoAutenticacion() === 'register'" (click)="cambiarModoAutenticacion('register')">
-            Crear cuenta
-          </button>
-        </div>
+        </form>
+      } @else if (modoAutenticacion() === 'register') {
+        <form [formGroup]="formularioRegistro" (ngSubmit)="registrarCuenta()" class="auth-form">
+          <label>
+            Nombre
+            <input type="text" formControlName="full_name" placeholder="Nombre y apellido" />
+          </label>
 
-        @if (modoAutenticacion() === 'login') {
-          <form [formGroup]="formularioLogin" (ngSubmit)="iniciarSesion()" class="auth-form">
-            <label>
-              Correo
-              <input type="email" formControlName="email" placeholder="correo@dominio.cl" />
-            </label>
-            <label>
-              Contrasena
-              <input type="password" formControlName="password" placeholder="Ingresa tu clave" />
-            </label>
-            <button type="submit" class="primary-button" [disabled]="tienda.authSubmitting()">
-              @if (tienda.authSubmitting()) {
-                Validando
-              } @else {
-                Entrar
-              }
-            </button>
-          </form>
-        } @else {
-          <form [formGroup]="formularioRegistro" (ngSubmit)="registrarCuenta()" class="auth-form">
-            <label>
-              Nombre
-              <input type="text" formControlName="full_name" placeholder="Nombre y apellido" />
-            </label>
-            <label>
-              Correo
-              <input type="email" formControlName="email" placeholder="correo@dominio.cl" />
-            </label>
-            <label>
-              Contrasena
-              <input type="password" formControlName="password" placeholder="Minimo 8 caracteres" />
-            </label>
-            <button type="submit" class="primary-button" [disabled]="tienda.authSubmitting()">
-              @if (tienda.authSubmitting()) {
-                Registrando
-              } @else {
-                Crear cuenta
-              }
-            </button>
-          </form>
-        }
-      </section>
-    </div>
-  }
+          <label>
+            Correo
+            <input type="email" formControlName="email" placeholder="correo@dominio.cl" />
+          </label>
+
+          <label>
+            Contrasena
+            <input type="password" formControlName="password" placeholder="Minimo 8 caracteres" />
+          </label>
+
+          <button type="submit" class="primary-button" [disabled]="tienda.authSubmitting()">
+            @if (tienda.authSubmitting()) {
+              Registrando
+            } @else {
+              Crear cuenta
+            }
+          </button>
+        </form>
+      } @else {
+        <form [formGroup]="formularioVerificacion" (ngSubmit)="verificarCuenta()" class="auth-form">
+          <label>
+            Correo
+            <input type="email" formControlName="email" placeholder="correo@dominio.cl" />
+          </label>
+
+          <label>
+            Codigo de validacion
+            <input type="text" formControlName="codigo" placeholder="Ej: 123456" />
+          </label>
+
+          <button type="submit" class="primary-button" [disabled]="tienda.authSubmitting()">
+            @if (tienda.authSubmitting()) {
+              Validando cuenta
+            } @else {
+              Validar cuenta
+            }
+          </button>
+
+          <button type="button" class="outline-button" (click)="reenviarCodigo()" [disabled]="tienda.authSubmitting()">
+            Reenviar codigo
+          </button>
+        </form>
+      }
+    </section>
+  </div>
+}
 </main>

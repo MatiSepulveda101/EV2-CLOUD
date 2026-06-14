@@ -48,7 +48,14 @@ services:
       dockerfile: Dockerfile
     container_name: ev3-backend
     environment:
+      DB_HOST: postgres-db
+      DB_PORT: 5432
+      DB_NAME: ecommerce
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+
       DATABASE_URL: postgresql+psycopg://postgres:postgres@postgres-db:5432/ecommerce
+
       JWT_SECRET_KEY: dev-secret-key-with-enough-length
 
       CORS_ORIGINS: http://localhost,http://localhost:4200,http://127.0.0.1,http://127.0.0.1:4200
@@ -56,6 +63,7 @@ services:
       AUTO_CREATE_TABLES: "true"
       AUTO_SEED_PRODUCTS: "true"
 
+      APP_PAGOS_URL: http://app-pagos:8002
       NOTIFICATIONS_SERVICE_URL: http://app-notificaciones:8003
     ports:
       - "8000:8000"

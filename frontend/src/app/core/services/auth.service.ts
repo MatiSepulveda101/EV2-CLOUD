@@ -1,7 +1,13 @@
 import { Injectable } from '@angular/core';
 import { Observable, catchError, map, throwError, tap } from 'rxjs';
 import { ApiClientService, ApiHttpError } from '../api/api-client.service';
-import { Token, UsuarioCrear, UsuarioLeer } from '../models/ecommerce.models';
+import {
+  Token,
+  UsuarioCrear,
+  UsuarioLeer,
+  UsuarioReenviarCodigo,
+  UsuarioVerificarCodigo
+} from '../models/ecommerce.models';
 import { SessionStateService } from '../state/session.state';
 
 @Injectable({
@@ -17,6 +23,17 @@ export class AuthService {
     return this.apiClient
       .post<UsuarioLeer | Record<string, unknown>>('/auth/register', payload)
       .pipe(map((response) => this.normalizeUser(response)));
+  }
+
+  verifyAccount(payload: UsuarioVerificarCodigo): Observable<UsuarioLeer> {
+    return this.apiClient
+      .post<UsuarioLeer | Record<string, unknown>>('/auth/verify', payload)
+      .pipe(map((response) => this.normalizeUser(response)));
+  }
+
+  resendCode(payload: UsuarioReenviarCodigo): Observable<{ message: string; email: string }> {
+    return this.apiClient
+      .post<{ message: string; email: string }>('/auth/resend-code', payload);
   }
 
   login(email: string, password: string): Observable<Token> {
@@ -50,10 +67,19 @@ export class AuthService {
 
   private normalizeToken(payload: Token | Record<string, unknown>): Token {
     const tokenPayload = payload as Record<string, unknown>;
+
     const accessToken = String(
-      tokenPayload['access_token'] ?? tokenPayload['token'] ?? tokenPayload['accessToken'] ?? ''
+      tokenPayload['access_token'] ??
+        tokenPayload['token'] ??
+        tokenPayload['accessToken'] ??
+        ''
     );
-    const tokenType = String(tokenPayload['token_type'] ?? tokenPayload['tokenType'] ?? 'bearer');
+
+    const tokenType = String(
+      tokenPayload['token_type'] ??
+        tokenPayload['tokenType'] ??
+        'bearer'
+    );
 
     return {
       access_token: accessToken,
@@ -69,6 +95,7 @@ export class AuthService {
       email: String(userPayload['email'] ?? ''),
       full_name: this.asOptionalString(userPayload['full_name'] ?? userPayload['name']),
       is_active: this.asOptionalBoolean(userPayload['is_active']),
+      is_verified: this.asOptionalBoolean(userPayload['is_verified']),
       created_at: this.asOptionalString(userPayload['created_at'])
     };
   }
