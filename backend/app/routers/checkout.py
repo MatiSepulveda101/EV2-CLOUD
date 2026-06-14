@@ -8,6 +8,7 @@ from app.deps import obtener_usuario_actual
 from app.models import EstadoPago, IntentoPago, ItemOrden, Orden, Usuario
 from app.schemas import RespuestaCheckout
 from app.services.cart import calcular_total_carrito, obtener_o_crear_carrito
+from app.services.notifications import enviar_email_compra
 from app.services.payments import ClientePagos, ErrorServicioPagos
 
 
@@ -15,10 +16,17 @@ router = APIRouter(prefix="/checkout", tags=["checkout"])
 
 
 @router.post("", response_model=RespuestaCheckout, status_code=status.HTTP_201_CREATED)
-def crear_checkout_orden(usuario_actual: Usuario = Depends(obtener_usuario_actual), db: Session = Depends(obtener_db)) -> RespuestaCheckout:
+def crear_checkout_orden(
+    usuario_actual: Usuario = Depends(obtener_usuario_actual),
+    db: Session = Depends(obtener_db),
+) -> RespuestaCheckout:
     carrito = obtener_o_crear_carrito(db, usuario_actual)
+
     if not carrito.items:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="El carrito esta vacio")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="El carrito esta vacio",
+        )
 
     for item in carrito.items:
         if item.producto.stock < item.quantity:
@@ -28,11 +36,30 @@ def crear_checkout_orden(usuario_actual: Usuario = Depends(obtener_usuario_actua
             )
 
     total = calcular_total_carrito(carrito)
-    orden = Orden(user_id=usuario_actual.id, subtotal=total, total=total)
+
+    orden = Orden(
+        user_id=usuario_actual.id,
+        subtotal=total,
+        total=total,
+    )
+
     db.add(orden)
     db.flush()
 
+    productos_compra = []
+
     for item in carrito.items:
+        line_total = item.producto.price * item.quantity
+
+        productos_compra.append(
+            {
+                "nombre": item.producto.name,
+                "cantidad": item.quantity,
+                "precio_unitario": float(item.producto.price),
+                "total": float(line_total),
+            }
+        )
+
         db.add(
             ItemOrden(
                 order_id=orden.id,
@@ -40,7 +67,7 @@ def crear_checkout_orden(usuario_actual: Usuario = Depends(obtener_usuario_actua
                 product_name=item.producto.name,
                 quantity=item.quantity,
                 unit_price=item.producto.price,
-                line_total=item.producto.price * item.quantity,
+                line_total=line_total,
             )
         )
 
@@ -55,7 +82,10 @@ def crear_checkout_orden(usuario_actual: Usuario = Depends(obtener_usuario_actua
             monto=total,
         )
     except ErrorServicioPagos as exc:
-        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc)) from exc
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=str(exc),
+        ) from exc
 
     pago = IntentoPago(
         order_id=orden.id,
@@ -65,8 +95,21 @@ def crear_checkout_orden(usuario_actual: Usuario = Depends(obtener_usuario_actua
         status=EstadoPago.pendiente,
         provider_response=checkout.raw_response,
     )
+
     db.add(pago)
     db.commit()
+    db.refresh(pago)
+
+    resultado_notificacion = enviar_email_compra(
+        email=usuario_actual.email,
+        nombre_cliente=usuario_actual.full_name,
+        numero_compra=str(orden.id),
+        fecha_compra=orden.created_at.isoformat(),
+        productos=productos_compra,
+        total_pagado=orden.total,
+    )
+
+    print("Resultado notificacion compra:", resultado_notificacion)
 
     return RespuestaCheckout(
         order_id=orden.id,

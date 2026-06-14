@@ -8,10 +8,11 @@ class Configuracion(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
-        extra="ignore"
+        extra="ignore",
+        case_sensitive=False
     )
 
-    app_name: str = "EV2 Ecommerce Backend"
+    app_name: str = "EV3 Ecommerce Backend"
     environment: str = "local"
 
     DB_HOST: str = "localhost"
@@ -32,8 +33,16 @@ class Configuracion(BaseSettings):
     payment_timeout_seconds: float = 10.0
     notifications_service_url: str = "http://app-notificaciones:8003"
 
+    aws_access_key_id: str = ""
+    aws_secret_access_key: str = ""
+    aws_region: str = "us-east-1"
+    s3_bucket_name: str = ""
+    user_storage_limit_bytes: int = 2147483648
+
     cors_origins: str = (
+        "http://localhost,"
         "http://localhost:4200,"
+        "http://127.0.0.1,"
         "http://127.0.0.1:4200,"
         "http://localhost:5173,"
         "http://ev2-alb-873341758.us-east-1.elb.amazonaws.com"

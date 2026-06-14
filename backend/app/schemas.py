@@ -112,3 +112,22 @@ class OrdenLeer(BaseModel):
     payment_attempts: list[IntentoPagoLeer]
     created_at: datetime
     updated_at: datetime
+
+class ArchivoUsuarioLeer(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    filename: str
+    s3_key: str
+    content_type: str
+    size_bytes: int
+    uploaded_at: datetime
+
+
+class AlmacenamientoUsuarioLeer(BaseModel):
+    limite_bytes: int
+    usado_bytes: int
+    disponible_bytes: int
+    usado_mb: float
+    disponible_mb: float
+    porcentaje_usado: float

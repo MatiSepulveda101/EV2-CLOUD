@@ -26,18 +26,35 @@ services:
       APP_ENV: development
       APP_PORT: 8003
 
-      SMTP_HOST: ""
-      SMTP_PORT: 587
-      SMTP_USER: ""
-      SMTP_PASSWORD: ""
-      SMTP_FROM: ""
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-}
 
-      TWILIO_ACCOUNT_SID: ""
-      TWILIO_AUTH_TOKEN: ""
-      TWILIO_FROM: ""
-      TWILIO_TO_TEST: ""
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-}
+      TWILIO_FROM: ${TWILIO_FROM:-}
+      TWILIO_TO_TEST: ${TWILIO_TO_TEST:-}
     ports:
       - "8003:8003"
+    networks:
+      - microservices-network
+    restart: unless-stopped
+
+  app-pagos:
+    build:
+      context: ./microservicios/app-pagos
+    container_name: ev3-app-pagos
+    environment:
+      MP_ACCESS_TOKEN: ${MP_ACCESS_TOKEN:-}
+      MP_PUBLIC_KEY: ${MP_PUBLIC_KEY:-}
+
+      MP_SUCCESS_URL: http://localhost:4200
+      MP_FAILURE_URL: http://localhost:4200
+      MP_PENDING_URL: http://localhost:4200
+    ports:
+      - "8002:8002"
     networks:
       - microservices-network
     restart: unless-stopped
@@ -65,6 +82,12 @@ services:
 
       APP_PAGOS_URL: http://app-pagos:8002
       NOTIFICATIONS_SERVICE_URL: http://app-notificaciones:8003
+
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      AWS_REGION: ${AWS_REGION:-us-east-1}
+      S3_BUCKET_NAME: ${S3_BUCKET_NAME:-}
+      USER_STORAGE_LIMIT_BYTES: ${USER_STORAGE_LIMIT_BYTES:-2147483648}
     ports:
       - "8000:8000"
     networks:
@@ -72,23 +95,7 @@ services:
     depends_on:
       - postgres-db
       - app-notificaciones
-    restart: unless-stopped
-
-  app-pagos:
-    build:
-      context: ./microservicios/app-pagos
-    container_name: ev3-app-pagos
-    environment:
-      MP_ACCESS_TOKEN: ${MP_ACCESS_TOKEN:-}
-      MP_PUBLIC_KEY: ${MP_PUBLIC_KEY:-}
-
-      MP_SUCCESS_URL: http://localhost:4200
-      MP_FAILURE_URL: http://localhost:4200
-      MP_PENDING_URL: http://localhost:4200
-    ports:
-      - "8002:8002"
-    networks:
-      - microservices-network
+      - app-pagos
     restart: unless-stopped
 
   frontend:
