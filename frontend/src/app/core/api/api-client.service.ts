@@ -20,7 +20,9 @@ export class ApiHttpError extends Error {
 })
 export class ApiClientService {
 
-  readonly baseUrl = 'http://localhost:8000/api';
+readonly baseUrl = window.location.hostname === 'localhost'
+  ? 'http://localhost:8000/api'
+  : '/api';
 
   constructor(private readonly http: HttpClient) {}
 

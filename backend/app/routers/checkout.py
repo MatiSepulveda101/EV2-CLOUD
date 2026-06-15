@@ -8,7 +8,6 @@ from app.deps import obtener_usuario_actual
 from app.models import EstadoPago, IntentoPago, ItemOrden, Orden, Usuario
 from app.schemas import RespuestaCheckout
 from app.services.cart import calcular_total_carrito, obtener_o_crear_carrito
-from app.services.notifications import enviar_email_compra
 from app.services.payments import ClientePagos, ErrorServicioPagos
 
 
@@ -46,19 +45,8 @@ def crear_checkout_orden(
     db.add(orden)
     db.flush()
 
-    productos_compra = []
-
     for item in carrito.items:
         line_total = item.producto.price * item.quantity
-
-        productos_compra.append(
-            {
-                "nombre": item.producto.name,
-                "cantidad": item.quantity,
-                "precio_unitario": float(item.producto.price),
-                "total": float(line_total),
-            }
-        )
 
         db.add(
             ItemOrden(
@@ -77,6 +65,7 @@ def crear_checkout_orden(
     try:
         checkout = ClientePagos().crear_checkout(
             usuario_id=usuario_actual.id,
+            orden_id=orden.id,
             email=usuario_actual.email,
             descripcion=f"Orden #{orden.id}",
             monto=total,
@@ -99,17 +88,6 @@ def crear_checkout_orden(
     db.add(pago)
     db.commit()
     db.refresh(pago)
-
-    resultado_notificacion = enviar_email_compra(
-        email=usuario_actual.email,
-        nombre_cliente=usuario_actual.full_name,
-        numero_compra=str(orden.id),
-        fecha_compra=orden.created_at.isoformat(),
-        productos=productos_compra,
-        total_pagado=orden.total,
-    )
-
-    print("Resultado notificacion compra:", resultado_notificacion)
 
     return RespuestaCheckout(
         order_id=orden.id,

@@ -264,10 +264,12 @@ export class ShopStateService implements OnDestroy {
   async createCheckout(): Promise<void> {
     this.checkoutLoading.set(true);
     this.checkoutError.set('');
+    this.successMessage.set('');
 
     try {
       const response = await firstValueFrom(this.ecommerceService.createCheckout());
       this.lastOrderId.set(response.order_id);
+      sessionStorage.setItem('checkout_order_id', String(response.order_id));
 
       if (response.payment_url) {
         window.location.href = response.payment_url;
@@ -291,6 +293,17 @@ export class ShopStateService implements OnDestroy {
     this.orderSubscription = this.ecommerceService.syncOrderUntilFinal(orderId).subscribe({
       next: (order) => {
         this.selectedOrder.set(order);
+
+        const estado = order.status.trim().toUpperCase();
+        if (estado === 'PAID') {
+          this.successMessage.set(`Compra exitosa. La orden #${order.id} fue pagada correctamente.`);
+          this.checkoutError.set('');
+          sessionStorage.removeItem('checkout_order_id');
+          void this.loadCart();
+        } else if (estado === 'REJECTED' || estado === 'CANCELLED') {
+          this.successMessage.set('');
+          this.checkoutError.set(`El pago de la orden #${order.id} no pudo completarse.`);
+        }
       },
       error: (error) => {
         this.orderSyncError.set(this.getErrorMessage(error));
@@ -309,6 +322,35 @@ export class ShopStateService implements OnDestroy {
     }
 
     this.startOrderSync(orderId);
+  }
+
+  handleCheckoutReturn(status: string | null, orderId: string | null): void {
+    const normalizedStatus = status?.trim().toLowerCase() ?? '';
+    const resolvedOrderId = orderId ?? sessionStorage.getItem('checkout_order_id');
+
+    if (resolvedOrderId) {
+      this.startOrderSync(resolvedOrderId);
+    }
+
+    if (normalizedStatus === 'approved') {
+      const message = resolvedOrderId
+        ? `Compra exitosa. La orden #${resolvedOrderId} fue pagada correctamente.`
+        : 'Compra exitosa. El pago fue aprobado correctamente.';
+      this.successMessage.set(message);
+      this.checkoutError.set('');
+      return;
+    }
+
+    if (normalizedStatus === 'pending' || normalizedStatus === 'in_process') {
+      this.successMessage.set('Tu pago esta pendiente de confirmacion.');
+      this.checkoutError.set('');
+      return;
+    }
+
+    if (['rejected', 'failure', 'cancelled', 'canceled'].includes(normalizedStatus)) {
+      this.successMessage.set('');
+      this.checkoutError.set('El pago no pudo completarse. Puedes intentarlo nuevamente.');
+    }
   }
 
   private stopOrderSync(): void {

@@ -25,9 +25,17 @@ class ClientePagos:
     def __init__(self, base_url: str | None = None) -> None:
         self.base_url = (base_url or configuracion.app_pagos_url).rstrip("/")
 
-    def crear_checkout(self, usuario_id: int, email: str, descripcion: str, monto: Decimal) -> CheckoutPago:
+    def crear_checkout(
+        self,
+        usuario_id: int,
+        orden_id: int,
+        email: str,
+        descripcion: str,
+        monto: Decimal,
+    ) -> CheckoutPago:
         datos_pago = {
             "id_usuario": usuario_id,
+            "id_orden": orden_id,
             "email_pagador": email,
             "descripcion": descripcion,
             "monto": float(monto),

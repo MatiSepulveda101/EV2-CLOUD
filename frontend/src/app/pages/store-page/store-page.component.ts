@@ -112,12 +112,8 @@ export class StorePageComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destruir))
       .subscribe((parametros) => {
         const idOrden = parametros.get('order_id');
-
-        if (!idOrden) {
-          return;
-        }
-
-        this.tienda.startOrderSync(idOrden);
+        const estadoPago = parametros.get('status') ?? parametros.get('collection_status');
+        this.tienda.handleCheckoutReturn(estadoPago, idOrden);
       });
   }
 

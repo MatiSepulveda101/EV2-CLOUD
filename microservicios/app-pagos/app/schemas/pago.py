@@ -6,6 +6,7 @@ from pydantic import BaseModel, EmailStr, field_validator
 
 class PagoCreateCheckoutRequest(BaseModel):
     id_usuario: int
+    id_orden: int
     descripcion: str
     monto: Decimal
     email_pagador: EmailStr = "usuario@email.cl"

@@ -1,0 +1,93 @@
+name: ev3-cloud-ecommerce
+
+services:
+  frontend:
+    image: 828435023385.dkr.ecr.us-east-1.amazonaws.com/ev3-frontend:latest
+    container_name: ev3-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - microservices-network
+    restart: unless-stopped
+
+  backend:
+    image: 828435023385.dkr.ecr.us-east-1.amazonaws.com/ev3-backend:latest
+    container_name: ev3-backend
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+
+      CORS_ORIGINS: ${CORS_ORIGINS}
+
+      AUTO_CREATE_TABLES: "true"
+      AUTO_SEED_PRODUCTS: "true"
+
+      APP_PAGOS_URL: http://app-pagos:8002
+      NOTIFICATIONS_SERVICE_URL: http://app-notificaciones:8003
+
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_REGION: us-east-1
+      S3_BUCKET_NAME: ev3-cloud-archivos-matias-oscar-jorge-ucm
+      USER_STORAGE_LIMIT_BYTES: 2147483648
+    ports:
+      - "8000:8000"
+    depends_on:
+      - app-pagos
+      - app-notificaciones
+    networks:
+      - microservices-network
+    restart: unless-stopped
+
+  app-pagos:
+    image: 828435023385.dkr.ecr.us-east-1.amazonaws.com/ev3-app-pagos:latest
+    container_name: ev3-app-pagos
+    environment:
+      MP_ACCESS_TOKEN: ${MP_ACCESS_TOKEN}
+      MP_PUBLIC_KEY: ${MP_PUBLIC_KEY}
+      MP_SUCCESS_URL: ${MP_SUCCESS_URL}
+      MP_FAILURE_URL: ${MP_FAILURE_URL}
+      MP_PENDING_URL: ${MP_PENDING_URL}
+    ports:
+      - "8002:8002"
+    networks:
+      - microservices-network
+    restart: unless-stopped
+
+  app-notificaciones:
+    image: 828435023385.dkr.ecr.us-east-1.amazonaws.com/ev3-app-notificaciones:latest
+    container_name: ev3-app-notificaciones
+    environment:
+      APP_NAME: app-notificaciones
+      APP_ENV: production
+      APP_PORT: 8003
+
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_FROM: ${SMTP_FROM}
+      SMTP_FROM_NAME: ${SMTP_FROM_NAME:-EV2 Cloud}
+      SMTP_USE_TLS: ${SMTP_USE_TLS:-true}
+      SMTP_USE_SSL: ${SMTP_USE_SSL:-false}
+
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN}
+      TWILIO_FROM: ${TWILIO_FROM}
+      TWILIO_TO_TEST: ${TWILIO_TO_TEST}
+    ports:
+      - "8003:8003"
+    networks:
+      - microservices-network
+    restart: unless-stopped
+
+networks:
+  microservices-network:
+    driver: bridge

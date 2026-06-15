@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
-
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
@@ -10,7 +8,7 @@ from app.database import obtener_db
 from app.deps import obtener_usuario_actual
 from app.models import EstadoOrden, EstadoPago, Orden, Usuario
 from app.schemas import IntentoPagoLeer, ItemOrdenLeer, OrdenLeer
-from app.services.notifications import enviar_email_pago
+from app.services.notifications import enviar_email_compra
 from app.services.payments import ClientePagos, ErrorServicioPagos
 
 router = APIRouter(prefix="/orders", tags=["orders"])
@@ -53,22 +51,26 @@ def _sincronizar_pago_pendiente(orden: Orden, db: Session) -> None:
     db.refresh(orden)
 
     if estado_pago == EstadoPago.pagado:
-        resumen_productos = ", ".join(
-            f"{item.product_name} x{item.quantity}"
+        productos_compra = [
+            {
+                "nombre": item.product_name,
+                "cantidad": item.quantity,
+                "precio_unitario": float(item.unit_price),
+                "total": float(item.line_total),
+            }
             for item in orden.items
-        )
+        ]
 
-        resultado_notificacion = enviar_email_pago(
+        resultado_notificacion = enviar_email_compra(
             email=orden.usuario.email,
             nombre_cliente=orden.usuario.full_name,
-            identificador_transaccion=str(ultimo_pago.app_pagos_id),
-            estado_pago=estado_pago.value,
-            fecha_pago=datetime.now(timezone.utc).isoformat(),
-            monto_pagado=orden.total,
-            resumen_compra=f"Orden #{orden.id}: {resumen_productos}",
+            numero_compra=str(orden.id),
+            fecha_compra=orden.created_at.isoformat(),
+            productos=productos_compra,
+            total_pagado=orden.total,
         )
 
-        print("Resultado notificacion pago Mercado Pago:", resultado_notificacion)
+        print("Resultado notificacion boleta de compra:", resultado_notificacion)
 
 def mapear_estado_pago(valor_estado: str) -> EstadoPago:
     estado_normalizado = valor_estado.strip().upper()

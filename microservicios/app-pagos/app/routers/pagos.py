@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from itertools import count
 from threading import Lock
 from typing import Dict
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 import mercadopago
 import requests
@@ -37,6 +38,13 @@ OPERACIONES_LOCK = Lock()
 OPERACIONES_SEQ = count(start=1_000_000)
 
 ESTADOS_FINALES = {"PAGADO", "RECHAZADO", "CANCELADO", "EXPIRADO", "ANULADO"}
+
+
+def _build_back_url(base_url: str, order_id: int) -> str:
+    parts = urlsplit(base_url)
+    query = dict(parse_qsl(parts.query, keep_blank_values=True))
+    query["order_id"] = str(order_id)
+    return urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(query), parts.fragment))
 
 
 def _generate_external_reference(id_usuario: int) -> str:
@@ -131,10 +139,11 @@ def crear_pago_checkout(payload: PagoCreateCheckoutRequest):
         },
         "external_reference": external_reference,
         "back_urls": {
-            "success": MP_SUCCESS_URL,
-            "failure": MP_FAILURE_URL,
-            "pending": MP_PENDING_URL
+            "success": _build_back_url(MP_SUCCESS_URL, payload.id_orden),
+            "failure": _build_back_url(MP_FAILURE_URL, payload.id_orden),
+            "pending": _build_back_url(MP_PENDING_URL, payload.id_orden)
         },
+        "auto_return": "approved",
     }
 
     if MP_WEBHOOK_URL:
